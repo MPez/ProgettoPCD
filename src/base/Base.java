@@ -57,9 +57,14 @@ public class Base implements IBase {
         listaAutotreni.add(autotreno);
     }
     
-    private class InviaOrdine implements Runnable {
+    private class ConsegnaOrdine implements Runnable {
         private IBase destinazione;
         private IAutotreno autotreno;
+        
+        ConsegnaOrdine(IBase destinazione, IAutotreno autotreno) {
+            this.destinazione = destinazione;
+            this.autotreno = autotreno;
+        }
         
         @Override
         public void run() {
