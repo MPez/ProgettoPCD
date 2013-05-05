@@ -34,7 +34,7 @@ public class BaseStarter {
         base = new Base(nomeBase, gui);
         gui.setBase(base);
         this.avviaGUI();
-        
+        this.avviaBase();
     }
     
     private void avviaBase() {

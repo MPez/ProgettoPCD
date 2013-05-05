@@ -83,6 +83,11 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     }
     
     @Override
+    public void parcheggiaAutotreno(IBase destinazione) {
+        basePartenza = destinazione;
+    }
+    
+    @Override
     public boolean stato() {
         return true;
     }

@@ -41,9 +41,9 @@ public class AutotrenoStarter {
         new Thread(gui).start();
     }
     
-    private void registra() {
+    private void registra(String nomeBasePartenza) {
         try {
-            IBase basePartenza = ditta.registraAutotreno(autotreno);
+            IBase basePartenza = ditta.registraAutotreno(autotreno, nomeBasePartenza);
             autotreno.setBasePartenza(basePartenza);
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la ditta durante la "
@@ -57,7 +57,7 @@ public class AutotrenoStarter {
         
         try{
             AutotrenoStarter autotrenoStarter = new AutotrenoStarter(nomeAutotreno, nomeBasePartenza);
-            autotrenoStarter.registra();
+            autotrenoStarter.registra(nomeBasePartenza);
         } catch(Exception e){
             System.out.println("Problemi nella creazione dell'autotreno " + 
                     nomeAutotreno + ".");

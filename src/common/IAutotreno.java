@@ -13,6 +13,7 @@ import java.rmi.*;
 public interface IAutotreno extends Remote {
     String getNomeAutotreno()throws RemoteException;
     void consegnaOrdine(IBase destinazione) throws RemoteException;
+    void parcheggiaAutotreno(IBase destinazione) throws RemoteException;
     boolean stato() throws RemoteException;
     void terminaAttivita() throws RemoteException;
 }

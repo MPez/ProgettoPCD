@@ -106,6 +106,11 @@ public class Base implements IBase {
         synchronized(listaAutotreni) {
             listaAutotreni.add(autotreno);
             listaAutotreni.notify();
+            try {
+                autotreno.parcheggiaAutotreno(this);
+            } catch(RemoteException e) {
+                System.out.println("Errore di comunicazione con l'autotreno per il parcheggio.");
+            }
         }
         try {
             gui.aggiornaStatoTextArea("Autotreno " + autotreno.getNomeAutotreno() 
