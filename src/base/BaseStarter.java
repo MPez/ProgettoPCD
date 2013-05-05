@@ -34,6 +34,11 @@ public class BaseStarter {
         base = new Base(nomeBase, gui);
         gui.setBase(base);
         this.avviaGUI();
+        
+    }
+    
+    private void avviaBase() {
+        new Thread(base.new ConsegnaOrdine()).start();
     }
     
     private void avviaGUI() {

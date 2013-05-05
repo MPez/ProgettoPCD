@@ -62,6 +62,5 @@ public class AutotrenoStarter {
             System.out.println("Problemi nella creazione dell'autotreno " + 
                     nomeAutotreno + ".");
         }
-        
     }
 }

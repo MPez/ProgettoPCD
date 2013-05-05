@@ -14,7 +14,8 @@ import java.rmi.*;
 public interface IBase extends Remote {
     String getNomeBase() throws RemoteException;
     void registraOrdine(IBase destinazione) throws RemoteException;
-    void riceviMerce(IAutotreno autotreno) throws RemoteException;
+    void ordineConsegnato(IBase destinazione) throws RemoteException;
+    void riceviMerce(IBase partenza, IAutotreno autotreno) throws RemoteException;
     boolean stato() throws RemoteException;
     void terminaAttività() throws RemoteException;
 }

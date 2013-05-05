@@ -6,6 +6,7 @@ package autotreno;
 
 import common.IAutotreno;
 import common.IBase;
+import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -31,7 +32,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     void setBasePartenza(IBase partenza) {
         this.basePartenza = partenza;
         try{
-            gui.setDestinazioneTextField(basePartenza.getNomeBase());
+            gui.setPartenzaTextField(basePartenza.getNomeBase());
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la base di partenza "
                     + "dell'autotreno " + getNomeAutotreno() + ".");
@@ -45,7 +46,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     void setBaseDestinazione(IBase destinazione) {
         this.baseDestinazione = destinazione;
         try{
-            gui.setPartenzaTextField(baseDestinazione.getNomeBase());
+            gui.setDestinazioneTextField(baseDestinazione.getNomeBase());
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la base di partenza "
                     + "dell'autotreno " + getNomeAutotreno() + ".");
@@ -62,8 +63,9 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     }
     
     @Override
-    public synchronized void consegnaOrdine(IBase destinazione) {
+    public void consegnaOrdine(IBase destinazione) {
         try {
+            //controllo che la base di destinazione sia attiva
             if(destinazione.stato()){
                 this.setBaseDestinazione(destinazione);
                 int durata = (int) Math.random()*1000;
@@ -71,7 +73,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                 for(int n = 0; n <= durata; n++) {
                     gui.aggiornaViaggioProgressBar(n);
                 }
-                baseDestinazione.riceviMerce(this);
+                baseDestinazione.riceviMerce(basePartenza,this);
             }
         } catch (RemoteException e) {
             System.out.println("Errore di comunicazione con la base di "
@@ -87,7 +89,8 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     @Override
     public void terminaAttivita() {
-        
+        gui.dispatchEvent(new WindowEvent(gui, WindowEvent.WINDOW_CLOSING));
+        System.exit(0);
     } 
 
 }
