@@ -164,6 +164,10 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         basePartenzaComboBox.removeItem(base);
     }
     
+    void aggiornaStatoTextArea(String text) {
+        statoTextArea.append(text + "\n");
+    }
+    
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
