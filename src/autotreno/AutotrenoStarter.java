@@ -21,7 +21,7 @@ public class AutotrenoStarter {
     private IDitta ditta;
     private static final String HOST = "localhost:";
     
-    AutotrenoStarter(String nomeAutotreno, String nomeBasePartenza) throws Exception {
+    AutotrenoStarter(String nomeAutotreno, String nomeBasePartenza) {
         try {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {
@@ -51,16 +51,11 @@ public class AutotrenoStarter {
         }
     }
     
-    public static void main(String[] args) throws RemoteException {
+    public static void main(String[] args) {
         String nomeAutotreno = args[0];
         String nomeBasePartenza = args[1];
-        
-        try{
-            AutotrenoStarter autotrenoStarter = new AutotrenoStarter(nomeAutotreno, nomeBasePartenza);
-            autotrenoStarter.registra(nomeBasePartenza);
-        } catch(Exception e){
-            System.out.println("Problemi nella creazione dell'autotreno " + 
-                    nomeAutotreno + ".");
-        }
+
+        AutotrenoStarter autotrenoStarter = new AutotrenoStarter(nomeAutotreno, nomeBasePartenza);
+        autotrenoStarter.registra(nomeBasePartenza);
     }
 }

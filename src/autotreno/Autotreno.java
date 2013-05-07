@@ -14,7 +14,7 @@ import java.rmi.server.UnicastRemoteObject;
  *
  * @author marco
  */
-public class Autotreno extends UnicastRemoteObject implements IAutotreno {
+public class Autotreno implements IAutotreno {
     private String nomeAutotreno;
     private String nomeBasePartenza;
     private IBase basePartenza;
@@ -22,8 +22,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     private AutotrenoGUI gui;
     
-    Autotreno(String nomeAutotreno, String nomeBase, AutotrenoGUI gui) 
-            throws RemoteException {
+    Autotreno(String nomeAutotreno, String nomeBase, AutotrenoGUI gui) {
         this.nomeAutotreno = nomeAutotreno;
         this.nomeBasePartenza = nomeBase;
         this.gui = gui;

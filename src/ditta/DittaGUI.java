@@ -190,12 +190,12 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         this.setVisible(true);
     }
     
-    void addBaseComboBox(String base) {
+    void aggiungiBaseComboBox(String base) {
         baseDestinazioneComboBox.addItem(base);
         basePartenzaComboBox.addItem(base);
     }
     
-    void removeBaseComboBox(String base) {
+    void rimuoviBaseComboBox(String base) {
         baseDestinazioneComboBox.removeItem(base);
         basePartenzaComboBox.removeItem(base);
     }

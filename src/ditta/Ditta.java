@@ -72,6 +72,7 @@ public class Ditta implements IDitta{
                         + "di registrazione.");
             }
         }
+        gui.aggiungiBaseComboBox(basiNomi.get(base));
     }
 
     @Override
@@ -133,6 +134,7 @@ public class Ditta implements IDitta{
         synchronized(basiAttive) {
             basiAttive.remove(base);
         }
+        gui.rimuoviBaseComboBox(basiNomi.get(base));
     }
 
     @Override

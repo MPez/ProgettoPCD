@@ -56,14 +56,8 @@ public class BaseStarter {
     
     public static void main(String[] args) {
         String nomeBase = args[0];
-        
-        try {
-            BaseStarter baseStarter = new BaseStarter(nomeBase);
-            baseStarter.registra();
-        } catch(Exception e) {
-            System.out.println("Problemi nella creazione della base " + 
-                    nomeBase + ".");
-        }
+
+        BaseStarter baseStarter = new BaseStarter(nomeBase);
+        baseStarter.registra();
     }
-    
 }
