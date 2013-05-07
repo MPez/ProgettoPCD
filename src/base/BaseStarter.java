@@ -20,7 +20,7 @@ public class BaseStarter {
     private IDitta ditta;
     private static final String HOST = "localhost:";
     
-    BaseStarter(String nomeBase) throws Exception {
+    BaseStarter(String nomeBase) {
         try {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {

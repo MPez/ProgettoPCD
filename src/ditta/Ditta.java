@@ -9,7 +9,6 @@ import common.IBase;
 import common.IDitta;
 import java.rmi.RemoteException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
@@ -23,6 +22,7 @@ public class Ditta implements IDitta{
     private LinkedList<IAutotreno> autotreniAttivi;
     private HashMap<String, IAutotreno> nomiAutotreni;
     private HashMap<IAutotreno, String> autotreniNomi;
+    private LinkedList<Ordine> elencoOrdini;
     
     private DittaGUI gui;
     
@@ -33,6 +33,23 @@ public class Ditta implements IDitta{
         terminato = false;
     }
 
+    void inserisciOrdine(String partenza, String destinazione, int quantita) {
+        IBase basePartenza;
+        IBase baseDestinazione;
+        basePartenza = nomiBasi.get(partenza);
+        baseDestinazione = nomiBasi.get(partenza);
+        
+        synchronized(elencoOrdini) {
+            elencoOrdini.add(this.new Ordine(basePartenza, baseDestinazione, quantita));
+        }
+        gui.aggiornaStatoTextArea("Ricevuto ordine da " + partenza + " a "
+                + destinazione + " da eseguirsi n°" + quantita + " volta/e.");
+    }
+    
+    void terminaAttivita() {
+        
+    }
+    
     @Override
     public void registraBase(IBase base) {
         synchronized(basiAttive) {
@@ -101,24 +118,34 @@ public class Ditta implements IDitta{
         gui.aggiornaStatoTextArea("Ordine proveniente da " 
                 + basiNomi.get(partenza) + " e diretto verso "
                 + basiNomi.get(destinazione) + " " + text 
-                + "è stato consegnato da "
+                + " è stato consegnato da "
                 + autotreniNomi.get(autotreno) + ".");
     }
 
     @Override
     public void aggiornaBasiAttive(IBase base) throws RemoteException {
+        rimuoviBase(base);
+        gui.aggiornaStatoTextArea("La base " + basiNomi.get(base)
+                + " non è più attiva.");
+    }
+    
+    private void rimuoviBase(IBase base) {
         synchronized(basiAttive) {
             basiAttive.remove(base);
         }
-        gui.aggiornaStatoTextArea("Una base non è più attiva.");
     }
 
     @Override
     public void aggiornaAutotreniAttivi(IAutotreno autotreno) throws RemoteException {
+        rimuoviAutotreno(autotreno);
+        gui.aggiornaStatoTextArea("L'autotreno " + autotreniNomi.get(autotreno)
+                + " non è più attivo.");
+    }
+    
+    private void rimuoviAutotreno(IAutotreno autotreno) {
         synchronized(autotreniAttivi) {
             autotreniAttivi.remove(autotreno);
         }
-        gui.aggiornaStatoTextArea("Un autotreno non è più attivo.");
     }
     
     class Ordine {
@@ -146,15 +173,38 @@ public class Ditta implements IDitta{
     }
     
     class InviaOrdini implements Runnable {
+        private IBase partenza;
+        private IBase destinazione;
+        private int quantita;
         private Ordine ordine;
-
-        public InviaOrdini(Ordine ordine) {
-            this.ordine = ordine;
-        }
         
         @Override
         public void run() {
-            
+            while(!terminato) {
+                try {
+                    synchronized(elencoOrdini) {
+                        while(!terminato && elencoOrdini.isEmpty()) {
+                            elencoOrdini.wait();
+                        }
+                        ordine = elencoOrdini.poll();
+                        partenza = ordine.getBasePartenza();
+                        destinazione = ordine.getBaseDestinazione();
+                        quantita = ordine.getQuantita();
+                        try {
+                            for(int i = 0; i < quantita; i++) {
+                                partenza.registraOrdine(destinazione);
+                            }
+                        } catch(RemoteException e) {
+                            System.out.println("Errore di comunicazione con la base "
+                                    + basiNomi.get(partenza) + ".");
+                        } finally {
+                            rimuoviBase(partenza);
+                        }
+                    }
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

@@ -157,6 +157,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Invia Ordine"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inviaOrdineButtonActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
@@ -177,7 +180,7 @@
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="statoScrollPane" alignment="0" pref="275" max="32767" attributes="0"/>
+              <Component id="statoScrollPane" alignment="0" pref="277" max="32767" attributes="0"/>
           </Group>
         </DimensionLayout>
       </Layout>
@@ -204,6 +207,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Termina Attivit&#xe0;"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="terminaAttivitaButtonActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

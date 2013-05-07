@@ -98,8 +98,16 @@ public class Base implements IBase {
         terminato = true;
         gui.aggiornaStatoTextArea("La base ha ricevuto l'ordine di terminare "
                 + "la propria attività");
-        gui.dispatchEvent(new WindowEvent(gui, WindowEvent.WINDOW_CLOSING));
-        System.exit(0);
+        gui.dispose();
+        synchronized(listaAutotreni) {
+            listaAutotreni.notifyAll();
+        }
+        synchronized(listaDestinazioni) {
+            listaDestinazioni.notifyAll();
+        }
+        synchronized(statoConsegne) {
+            statoConsegne.notifyAll();
+        }
     }
     
     private void parcheggia(IAutotreno autotreno) {
@@ -152,72 +160,74 @@ public class Base implements IBase {
         
         @Override
         public void run() {
-            try {
-                //prendo il lock sulla lista delle basi di destinazione
-                synchronized(listaDestinazioni) {
-                    //controllo che non sia stato riecevuto l'ordine di terminare
-                    //e che la lista di ordini non sia vuota
-                    while(!terminato && listaDestinazioni.isEmpty()) {
-                        listaDestinazioni.wait();
-                    }
-                    //prendo il lock sulla lista degli autotreni parcheggiati
-                    synchronized(listaAutotreni) {
+            while(!terminato) {
+                try {
+                    //prendo il lock sulla lista delle basi di destinazione
+                    synchronized(listaDestinazioni) {
                         //controllo che non sia stato riecevuto l'ordine di terminare
-                        //e che esistano autotreni parcheggiati da utilizzare
-                        while(!terminato && listaAutotreni.isEmpty()) {
-                            listaAutotreni.wait();
+                        //e che la lista di ordini non sia vuota
+                        while(!terminato && listaDestinazioni.isEmpty()) {
+                            listaDestinazioni.wait();
                         }
-                        destinazione = listaDestinazioni.poll();
-                        statoConsegne.put(destinazione, false);
-                        autotreno = listaAutotreni.poll();
-                        try {
-                            //controllo che non sia stato riecevuto l'ordine di terminare,
-                            //controllo che la base sia attiva
-                            //in caso contrario la rimuovo dalla lista degli autotreni
-                            if(!terminato && destinazione.stato()) {
-                                try {
-                                    //controllo che non sia stato riecevuto l'ordine di terminare,
-                                    //controllo che l'autotreno sia attivo
-                                    if(!terminato && autotreno.stato()) {
-                                        //prendo il lock sulla mappa degli ordini in evasione
-                                        synchronized(statoConsegne) {
-                                            //controllo che non sia stato riecevuto l'ordine di terminare,
-                                            //controllo che non sia in corso un ordine verso la stessa destinazione
-                                            while(!terminato && statoConsegne.get(destinazione)) {
-                                                statoConsegne.wait();
-                                            }
-                                            autotreno.consegnaOrdine(destinazione);
-                                            gui.aggiornaStatoTextArea("Autotreno " 
-                                                    + autotreno.getNomeAutotreno() 
-                                                    + "in partenza per " 
-                                                    + destinazione.getNomeBase());
-                                        }
-                                    }
-                                } catch(RemoteException e) {
-                                    System.out.println("Errore di comunicazione con "
-                                    + "l'autotreno per la consegna dell'ordine.");
-                                } finally {
-                                    //segnalo l'errore ed elimino l'autotreno dalle liste
-                                    gui.aggiornaStatoTextArea("In attesa di un nuovo autotreno");
-                                    listaAutotreni.remove(autotreno);
-                                    autotreniAttivi.remove(autotreno);
-                                }
+                        //prendo il lock sulla lista degli autotreni parcheggiati
+                        synchronized(listaAutotreni) {
+                            //controllo che non sia stato riecevuto l'ordine di terminare
+                            //e che esistano autotreni parcheggiati da utilizzare
+                            while(!terminato && listaAutotreni.isEmpty()) {
+                                listaAutotreni.wait();
                             }
-                        } catch(RemoteException e) {
-                            System.out.println("Errore di comunicazione con la "
-                                    + "base di destinazione.");
-                        } finally {
-                            //segnalo l'errore ed elimino la base dalle liste
-                            //aggiorno l'ultima destinazione
-                            gui.aggiornaStatoTextArea("Ordine annullato.");
-                            listaDestinazioni.remove(destinazione);
-                            statoConsegne.remove(destinazione);
-                            basiAttive.remove(destinazione);
+                            destinazione = listaDestinazioni.poll();
+                            statoConsegne.put(destinazione, false);
+                            autotreno = listaAutotreni.poll();
+                            try {
+                                //controllo che non sia stato riecevuto l'ordine di terminare,
+                                //controllo che la base sia attiva
+                                //in caso contrario la rimuovo dalla lista degli autotreni
+                                if(!terminato && destinazione.stato()) {
+                                    try {
+                                        //controllo che non sia stato riecevuto l'ordine di terminare,
+                                        //controllo che l'autotreno sia attivo
+                                        if(!terminato && autotreno.stato()) {
+                                            //prendo il lock sulla mappa degli ordini in evasione
+                                            synchronized(statoConsegne) {
+                                                //controllo che non sia stato riecevuto l'ordine di terminare,
+                                                //controllo che non sia in corso un ordine verso la stessa destinazione
+                                                while(!terminato && statoConsegne.get(destinazione)) {
+                                                    statoConsegne.wait();
+                                                }
+                                                autotreno.consegnaOrdine(destinazione);
+                                                gui.aggiornaStatoTextArea("Autotreno " 
+                                                        + autotreno.getNomeAutotreno() 
+                                                        + "in partenza per " 
+                                                        + destinazione.getNomeBase());
+                                            }
+                                        }
+                                    } catch(RemoteException e) {
+                                        System.out.println("Errore di comunicazione con "
+                                        + "l'autotreno per la consegna dell'ordine.");
+                                    } finally {
+                                        //segnalo l'errore ed elimino l'autotreno dalle liste
+                                        gui.aggiornaStatoTextArea("In attesa di un nuovo autotreno");
+                                        listaAutotreni.remove(autotreno);
+                                        autotreniAttivi.remove(autotreno);
+                                    }
+                                }
+                            } catch(RemoteException e) {
+                                System.out.println("Errore di comunicazione con la "
+                                        + "base di destinazione.");
+                            } finally {
+                                //segnalo l'errore ed elimino la base dalle liste
+                                //aggiorno l'ultima destinazione
+                                gui.aggiornaStatoTextArea("Ordine annullato.");
+                                listaDestinazioni.remove(destinazione);
+                                statoConsegne.remove(destinazione);
+                                basiAttive.remove(destinazione);
+                            }
                         }
                     }
+                } catch(InterruptedException e) {
+                    System.out.println(e.getMessage());
                 }
-            } catch(InterruptedException e) {
-                System.out.println(e.getMessage());
             }
         }
     }

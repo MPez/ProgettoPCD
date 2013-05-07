@@ -4,6 +4,10 @@
  */
 package ditta;
 
+import common.IBase;
+import java.util.HashMap;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author marco
@@ -15,8 +19,11 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
      * Creates new form DittaGUI
      */
     public DittaGUI() {
-        initComponents();
-        
+        initComponents();        
+    }
+
+    public void setDitta(Ditta ditta) {
+        this.ditta = ditta;
     }
 
     /**
@@ -56,6 +63,11 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         quantitaOrdiniSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
 
         inviaOrdineButton.setText("Invia Ordine");
+        inviaOrdineButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inviaOrdineButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout inserimentoOrdiniPanelLayout = new javax.swing.GroupLayout(inserimentoOrdiniPanel);
         inserimentoOrdiniPanel.setLayout(inserimentoOrdiniPanelLayout);
@@ -114,10 +126,15 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         );
         statoPanelLayout.setVerticalGroup(
             statoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statoScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+            .addComponent(statoScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
         );
 
         terminaAttivitaButton.setText("Termina Attività");
+        terminaAttivitaButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                terminaAttivitaButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -148,6 +165,25 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void inviaOrdineButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inviaOrdineButtonActionPerformed
+        String partenza = (String) basePartenzaComboBox.getSelectedItem();
+        String destinazione = (String) baseDestinazioneComboBox.getSelectedItem();
+        int quantita = (int) quantitaOrdiniSpinner.getValue();
+        
+        if(!partenza.equals(destinazione)) {
+            ditta.inserisciOrdine(partenza, destinazione, quantita);
+        }
+        else {
+            JOptionPane.showMessageDialog(this, "La base di partenza e la base di "
+                    + "destinazione devono essere diverse", "Attenzione", 
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }//GEN-LAST:event_inviaOrdineButtonActionPerformed
+
+    private void terminaAttivitaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_terminaAttivitaButtonActionPerformed
+        ditta.terminaAttivita();
+    }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
+
 
     @Override
     public void run() {
@@ -167,8 +203,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     void aggiornaStatoTextArea(String text) {
         statoTextArea.append(text + "\n");
     }
-    
-    
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox baseDestinazioneComboBox;
