@@ -18,19 +18,22 @@ public class DittaStarter {
     
     private static final String HOST = "localhost:";
 
-    public DittaStarter() {
+    public DittaStarter() throws RemoteException {
         gui = new DittaGUI();
         ditta = new Ditta(gui);
         gui.setDitta(ditta);
         
+        avviaGUI();
+        avviaDitta();
+        
         try {
-            String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti"; Naming.rebind(rmiNomeDitta, ditta);
+            String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
+            Naming.rebind(rmiNomeDitta, ditta);
         } catch( RemoteException | MalformedURLException e) {
             System.out.println("Errore nella registrazione della ditta con il registro RMI.");
         }
         
-        this.avviaGUI();
-        this.avviaDitta();
+        
     }
     
     private void avviaGUI() {
@@ -41,7 +44,11 @@ public class DittaStarter {
         new Thread(ditta.new InviaOrdini()).start();
     }
     
-    public static void main(String[] args) throws RemoteException, MalformedURLException {
-        DittaStarter dittaStarter = new DittaStarter();
+    public static void main(String[] args) {
+        try {
+            new DittaStarter();
+        } catch(RemoteException e) {
+            System.out.println("Errore di connessione nella creazione della ditta.");
+        }
     }
 }

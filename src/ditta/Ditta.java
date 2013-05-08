@@ -7,7 +7,9 @@ package ditta;
 import common.IAutotreno;
 import common.IBase;
 import common.IDitta;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -15,7 +17,7 @@ import java.util.LinkedList;
  *
  * @author marco
  */
-public class Ditta implements IDitta{
+public class Ditta extends UnicastRemoteObject implements IDitta{
     private LinkedList<IBase> basiAttive;
     private HashMap<String, IBase> nomiBasi;
     private HashMap<IBase, String> basiNomi;
@@ -28,7 +30,15 @@ public class Ditta implements IDitta{
     
     private boolean terminato;
     
-    Ditta(DittaGUI gui) {
+    Ditta(DittaGUI gui) throws RemoteException {
+        basiAttive = new LinkedList<>();
+        nomiBasi = new HashMap<>();
+        basiNomi = new HashMap<>();
+        autotreniAttivi = new LinkedList<>();
+        nomiAutotreni = new HashMap<>();
+        autotreniNomi = new HashMap<>();
+        elencoOrdini = new LinkedList<>();
+        
         this.gui = gui;
         terminato = false;
     }
@@ -37,17 +47,34 @@ public class Ditta implements IDitta{
         IBase basePartenza;
         IBase baseDestinazione;
         basePartenza = nomiBasi.get(partenza);
-        baseDestinazione = nomiBasi.get(partenza);
+        baseDestinazione = nomiBasi.get(destinazione);
         
         synchronized(elencoOrdini) {
             elencoOrdini.add(this.new Ordine(basePartenza, baseDestinazione, quantita));
+            elencoOrdini.notify();
         }
         gui.aggiornaStatoTextArea("Ricevuto ordine da " + partenza + " a "
                 + destinazione + " da eseguirsi n°" + quantita + " volta/e.");
     }
     
     void terminaAttivita() {
-        
+        terminato = true;
+        gui.dispose();
+        try {
+            for(IBase base : basiAttive) {
+                base.terminaAttività();
+            }
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con una base in fase di chiusura.");
+        }
+        try {
+            for(IAutotreno autotreno : autotreniAttivi) {
+                autotreno.terminaAttivita();
+            }
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con un autotreno in fase di chiusura.");
+        }
+        System.exit(0);
     }
     
     @Override
@@ -58,7 +85,7 @@ public class Ditta implements IDitta{
         synchronized(nomiBasi) {
             try {
                 nomiBasi.put(base.getNomeBase(), base);
-                nomiBasi.notify();
+                nomiBasi.notifyAll();
             } catch(RemoteException e) {
                 System.out.println("Errore di comunicazione con una base in fase "
                         + "di registrazione.");

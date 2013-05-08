@@ -21,7 +21,7 @@ public class AutotrenoStarter {
     private IDitta ditta;
     private static final String HOST = "localhost:";
     
-    AutotrenoStarter(String nomeAutotreno, String nomeBasePartenza) {
+    AutotrenoStarter(String nomeAutotreno, String nomeBasePartenza) throws RemoteException {
         try {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {
@@ -45,6 +45,7 @@ public class AutotrenoStarter {
         try {
             IBase basePartenza = ditta.registraAutotreno(autotreno, nomeBasePartenza);
             autotreno.setBasePartenza(basePartenza);
+            basePartenza.parcheggiaAutotreno(autotreno);
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la ditta durante la "
                     + "registrazione dell'autotreno" + autotreno.getNomeAutotreno() + ".");
@@ -54,8 +55,12 @@ public class AutotrenoStarter {
     public static void main(String[] args) {
         String nomeAutotreno = args[0];
         String nomeBasePartenza = args[1];
-
-        AutotrenoStarter autotrenoStarter = new AutotrenoStarter(nomeAutotreno, nomeBasePartenza);
-        autotrenoStarter.registra(nomeBasePartenza);
+        try {
+            AutotrenoStarter autotrenoStarter = new AutotrenoStarter(nomeAutotreno, nomeBasePartenza);
+            autotrenoStarter.registra(nomeBasePartenza);
+        } catch(RemoteException e) {
+            System.out.println("Errore di connessione nella creazione dell'autotreno "
+                    + nomeAutotreno + ".");
+        }
     }
 }

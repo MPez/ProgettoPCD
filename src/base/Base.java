@@ -8,6 +8,7 @@ import common.IAutotreno;
 import common.IBase;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -15,7 +16,7 @@ import java.util.LinkedList;
  *
  * @author marco
  */
-public class Base implements IBase {
+public class Base extends UnicastRemoteObject implements IBase {
     private String nomeBase;
     
     private LinkedList<IBase> listaDestinazioni;
@@ -28,7 +29,13 @@ public class Base implements IBase {
     
     private boolean terminato;
 
-    Base(String nomeBase, BaseGUI gui) {
+    Base(String nomeBase, BaseGUI gui) throws RemoteException {
+        listaDestinazioni = new LinkedList<>();
+        listaAutotreni = new LinkedList<>();
+        basiAttive = new LinkedList<>();
+        autotreniAttivi = new LinkedList<>();
+        statoConsegne = new HashMap<>();
+        
         this.nomeBase = nomeBase;
         this.gui = gui;
         terminato = false;
@@ -89,6 +96,11 @@ public class Base implements IBase {
     }
 
     @Override
+    public void parcheggiaAutotreno(IAutotreno autotreno) {
+        parcheggia(autotreno);
+    }
+    
+    @Override
     public boolean stato()  {
         return true;
     }
@@ -108,6 +120,7 @@ public class Base implements IBase {
         synchronized(statoConsegne) {
             statoConsegne.notifyAll();
         }
+        System.exit(0);
     }
     
     private void parcheggia(IAutotreno autotreno) {

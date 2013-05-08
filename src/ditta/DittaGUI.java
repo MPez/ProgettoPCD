@@ -4,8 +4,6 @@
  */
 package ditta;
 
-import common.IBase;
-import java.util.HashMap;
 import javax.swing.JOptionPane;
 
 /**

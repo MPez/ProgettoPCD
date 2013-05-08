@@ -20,7 +20,7 @@ public class BaseStarter {
     private IDitta ditta;
     private static final String HOST = "localhost:";
     
-    BaseStarter(String nomeBase) {
+    BaseStarter(String nomeBase) throws RemoteException {
         try {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {
@@ -56,8 +56,12 @@ public class BaseStarter {
     
     public static void main(String[] args) {
         String nomeBase = args[0];
-
-        BaseStarter baseStarter = new BaseStarter(nomeBase);
-        baseStarter.registra();
+        try {
+            BaseStarter baseStarter = new BaseStarter(nomeBase);
+            baseStarter.registra();
+        } catch(RemoteException e) {
+            System.out.println("Errore di connessione nella creazione della base "
+                    + nomeBase + ".");
+        }
     }
 }

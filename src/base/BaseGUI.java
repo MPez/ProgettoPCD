@@ -67,6 +67,11 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
         );
 
         terminaAttivitaButton.setText("Termina Attività");
+        terminaAttivitaButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                terminaAttivitaButtonActionPerformed(evt);
+            }
+        });
 
         informazioneBasePanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Informazioni Base"));
 
@@ -135,11 +140,15 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
                 .addComponent(statoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(terminaAttivitaButton)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void terminaAttivitaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_terminaAttivitaButtonActionPerformed
+        base.terminaAttività();
+    }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
 
     @Override

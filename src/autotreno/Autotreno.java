@@ -6,7 +6,6 @@ package autotreno;
 
 import common.IAutotreno;
 import common.IBase;
-import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -14,7 +13,7 @@ import java.rmi.server.UnicastRemoteObject;
  *
  * @author marco
  */
-public class Autotreno implements IAutotreno {
+public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private String nomeAutotreno;
     private String nomeBasePartenza;
     private IBase basePartenza;
@@ -22,7 +21,7 @@ public class Autotreno implements IAutotreno {
     
     private AutotrenoGUI gui;
     
-    Autotreno(String nomeAutotreno, String nomeBase, AutotrenoGUI gui) {
+    Autotreno(String nomeAutotreno, String nomeBase, AutotrenoGUI gui) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
         this.nomeBasePartenza = nomeBase;
         this.gui = gui;
@@ -93,7 +92,7 @@ public class Autotreno implements IAutotreno {
     
     @Override
     public void terminaAttivita() {
-        gui.dispatchEvent(new WindowEvent(gui, WindowEvent.WINDOW_CLOSING));
+        gui.dispose();
         System.exit(0);
     } 
 
