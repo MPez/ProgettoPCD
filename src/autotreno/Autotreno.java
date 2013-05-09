@@ -15,15 +15,13 @@ import java.rmi.server.UnicastRemoteObject;
  */
 public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private String nomeAutotreno;
-    private String nomeBasePartenza;
     private IBase basePartenza;
     private IBase baseDestinazione;
     
     private AutotrenoGUI gui;
     
-    Autotreno(String nomeAutotreno, String nomeBase, AutotrenoGUI gui) throws RemoteException {
+    Autotreno(String nomeAutotreno, AutotrenoGUI gui) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
-        this.nomeBasePartenza = nomeBase;
         this.gui = gui;
     }
     
@@ -33,7 +31,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
             gui.setPartenzaTextField(basePartenza.getNomeBase());
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la base di partenza "
-                    + "dell'autotreno " + getNomeAutotreno() + ".");
+                    + "dell'autotreno " + getNomeAutotreno());
         }
     }
     
@@ -46,8 +44,8 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         try{
             gui.setDestinazioneTextField(baseDestinazione.getNomeBase());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la base di partenza "
-                    + "dell'autotreno " + getNomeAutotreno() + ".");
+            System.out.println("Errore di comunicazione con la base di destinazione "
+                    + "dell'autotreno " + getNomeAutotreno());
         }
     }
     
@@ -66,23 +64,29 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
             //controllo che la base di destinazione sia attiva
             if(destinazione.stato()){
                 this.setBaseDestinazione(destinazione);
-                int durata = (int) Math.random()*1000;
+                int durata = (int) (Math.random())*10000;
                 gui.inizializzaViaggioProgressBar(0, durata);
                 for(int n = 0; n <= durata; n++) {
                     gui.aggiornaViaggioProgressBar(n);
+                    try {
+                        Thread.currentThread().sleep(2000);
+                    } catch(InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
                 baseDestinazione.riceviMerce(basePartenza,this);
             }
         } catch (RemoteException e) {
             System.out.println("Errore di comunicazione con la base di "
-                    + "destinazione; impossibile evadere l'ordine.");
+                    + "destinazione; impossibile evadere l'ordine");
         }
-        
     }
     
     @Override
     public void parcheggiaAutotreno(IBase destinazione) {
         basePartenza = destinazione;
+        setBasePartenza(basePartenza);
+        gui.setDestinazioneTextField("");
     }
     
     @Override
@@ -95,5 +99,4 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         gui.dispose();
         System.exit(0);
     } 
-
 }

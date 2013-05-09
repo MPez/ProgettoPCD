@@ -32,5 +32,5 @@ start:
 	#java base.BaseStarter Est &
 	java autotreno.AutotrenoStarter Blue Nord &
 	java autotreno.AutotrenoStarter Green Sud &
-	#java autotreno.AutotrenoStarter Red Ovest &
-	#java autotreno.AutotrenoStarter White Est
+	java autotreno.AutotrenoStarter Red Nord &
+	java autotreno.AutotrenoStarter White Sud

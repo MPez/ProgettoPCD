@@ -26,29 +26,37 @@ public class AutotrenoStarter {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {
             System.out.println("Errore di comunicazione con la ditta di trasporti");
-        }
-        catch (Exception e1) {
+        } catch (Exception e1) {
             e1.printStackTrace();
         }
         
         gui = new AutotrenoGUI(nomeAutotreno);
-        autotreno = new Autotreno(nomeAutotreno, nomeBasePartenza, gui);
+        autotreno = new Autotreno(nomeAutotreno, gui);
         gui.setAutotreno(autotreno);
         this.avviaGUI();
     }
     
+    //metodo che avvia la gui dell'autotreno
     private void avviaGUI() {
         new Thread(gui).start();
     }
     
+    //metodo che si connette alla ditta per la registrazione dell'autotreno e
+    //che si connette alla base di partenza per parcheggiarlo
     private void registra(String nomeBasePartenza) {
         try {
             IBase basePartenza = ditta.registraAutotreno(autotreno, nomeBasePartenza);
             autotreno.setBasePartenza(basePartenza);
-            basePartenza.parcheggiaAutotreno(autotreno);
+            try {
+                basePartenza.parcheggiaAutotreno(autotreno);
+            } catch(RemoteException e) {
+                System.out.println("Errore di comunicazione con la base di partenza "
+                        + "durante la registrazione dell'autotreno "
+                        + autotreno.getNomeAutotreno());
+            }
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la ditta durante la "
-                    + "registrazione dell'autotreno" + autotreno.getNomeAutotreno() + ".");
+                    + "registrazione dell'autotreno " + autotreno.getNomeAutotreno());
         }
     }
     
@@ -60,7 +68,7 @@ public class AutotrenoStarter {
             autotrenoStarter.registra(nomeBasePartenza);
         } catch(RemoteException e) {
             System.out.println("Errore di connessione nella creazione dell'autotreno "
-                    + nomeAutotreno + ".");
+                    + nomeAutotreno);
         }
     }
 }

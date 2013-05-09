@@ -81,10 +81,12 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
 
         ordiniTextArea.setColumns(20);
         ordiniTextArea.setRows(5);
+        ordiniTextArea.setEnabled(false);
         ordiniScrollPane.setViewportView(ordiniTextArea);
 
         autotreniTextArea.setColumns(20);
         autotreniTextArea.setRows(5);
+        autotreniTextArea.setEnabled(false);
         autotreniScrollPane.setViewportView(autotreniTextArea);
 
         javax.swing.GroupLayout informazioneBasePanelLayout = new javax.swing.GroupLayout(informazioneBasePanel);
@@ -140,7 +142,7 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
                 .addComponent(statoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(terminaAttivitaButton)
-                .addContainerGap(18, Short.MAX_VALUE))
+                .addContainerGap(23, Short.MAX_VALUE))
         );
 
         pack();

@@ -31,7 +31,7 @@ public class BaseStarter {
         }
         
         gui = new BaseGUI(nomeBase);
-        base = new Base(nomeBase, gui);
+        base = new Base(nomeBase, gui, ditta);
         gui.setBase(base);
         this.avviaGUI();
         this.avviaBase();
@@ -50,7 +50,7 @@ public class BaseStarter {
             ditta.registraBase(base);
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la ditta durante la "
-                    + "registrazione della base " + base.getNomeBase() + ".");
+                    + "registrazione della base " + base.getNomeBase());
         }
     }
     
@@ -61,7 +61,7 @@ public class BaseStarter {
             baseStarter.registra();
         } catch(RemoteException e) {
             System.out.println("Errore di connessione nella creazione della base "
-                    + nomeBase + ".");
+                    + nomeBase);
         }
     }
 }

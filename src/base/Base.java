@@ -6,7 +6,7 @@ package base;
 
 import common.IAutotreno;
 import common.IBase;
-import java.awt.event.WindowEvent;
+import common.IDitta;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -21,23 +21,21 @@ public class Base extends UnicastRemoteObject implements IBase {
     
     private LinkedList<IBase> listaDestinazioni;
     private LinkedList<IAutotreno> listaAutotreni;
-    private LinkedList<IBase> basiAttive;
-    private LinkedList<IAutotreno> autotreniAttivi;
     private HashMap<IBase, Boolean> statoConsegne;
     
     private BaseGUI gui;
+    private IDitta ditta;
     
     private boolean terminato;
 
-    Base(String nomeBase, BaseGUI gui) throws RemoteException {
+    Base(String nomeBase, BaseGUI gui, IDitta ditta) throws RemoteException {
         listaDestinazioni = new LinkedList<>();
         listaAutotreni = new LinkedList<>();
-        basiAttive = new LinkedList<>();
-        autotreniAttivi = new LinkedList<>();
         statoConsegne = new HashMap<>();
         
         this.nomeBase = nomeBase;
         this.gui = gui;
+        this.ditta = ditta;
         terminato = false;
     }
     
@@ -48,20 +46,18 @@ public class Base extends UnicastRemoteObject implements IBase {
 
     @Override
     public void registraOrdine(IBase destinazione) {
-        synchronized(basiAttive) {
-            if(!basiAttive.contains(destinazione)) {
-                basiAttive.add(destinazione);
-            }
-        }
         synchronized(listaDestinazioni) {
             listaDestinazioni.add(destinazione);
             listaDestinazioni.notify();
         }
+        synchronized(statoConsegne) {
+            statoConsegne.put(destinazione, false);
+            statoConsegne.notify();
+        }
         try {
-            gui.aggiornaStatoTextArea("Ricevuto ordine per " 
-                    + destinazione.getNomeBase());
+            gui.aggiornaStatoTextArea("Ricevuto ordine per " + destinazione.getNomeBase());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la base di destinazione.");
+            System.out.println("Errore di comunicazione con la base di destinazione");
         }
         aggiornaOrdiniGUI();
     }
@@ -69,23 +65,18 @@ public class Base extends UnicastRemoteObject implements IBase {
     @Override
     public void ordineConsegnato(IBase destinazione) throws RemoteException {
         synchronized(statoConsegne) {
-            statoConsegne.put(destinazione, true);
+            statoConsegne.put(destinazione, false);
             statoConsegne.notify();
         }
     }
 
     @Override
     public void riceviMerce(IBase partenza, IAutotreno autotreno) {
-        synchronized(autotreniAttivi) {
-            if(!autotreniAttivi.contains(autotreno)) {
-                autotreniAttivi.add(autotreno);
-            }
-        }
         try {
             gui.aggiornaStatoTextArea("Ricevuto carico da " 
                     + autotreno.getNomeAutotreno());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con l'autotreno.");
+            System.out.println("Errore di comunicazione con l'autotreno");
         }
         parcheggia(autotreno);
         try {
@@ -130,28 +121,28 @@ public class Base extends UnicastRemoteObject implements IBase {
             try {
                 autotreno.parcheggiaAutotreno(this);
             } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con l'autotreno per il parcheggio.");
+                System.out.println("Errore di comunicazione con l'autotreno per il parcheggio");
             }
         }
         try {
             gui.aggiornaStatoTextArea("Autotreno " + autotreno.getNomeAutotreno() 
-                    + " parcheggiato.");
+                    + " parcheggiato");
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con l'autotreno.");
-        }
+            System.out.println("Errore di comunicazione con l'autotreno");
+        }  
         aggiornaAutotreniGUI();
     }
     
     private void aggiornaAutotreniGUI() {
-        String auto = "";
+        String nomi = "";
         for(IAutotreno autotreno : listaAutotreni) {
             try {
-                auto += autotreno.getNomeAutotreno() + "\n";
+                nomi += autotreno.getNomeAutotreno() + "\n";
             } catch(RemoteException e) {
-                System.err.println("Errore di comunicazione con un autotreno parcheggiato.");
+                System.out.println("Errore di comunicazione con un autotreno parcheggiato");
             }
         }
-        gui.setAutotreniTextArea(auto);
+        gui.setAutotreniTextArea(nomi);
     }
     
     private void aggiornaOrdiniGUI() {
@@ -159,9 +150,8 @@ public class Base extends UnicastRemoteObject implements IBase {
         for(IBase base : listaDestinazioni) {
             try {
                 nomi += base.getNomeBase() + "\n";
-                
             } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con una base di destinazione.");
+                System.out.println("Errore di comunicazione con una base di destinazione");
             }
         }
         gui.setOrdiniTextArea(nomi);
@@ -182,64 +172,44 @@ public class Base extends UnicastRemoteObject implements IBase {
                         while(!terminato && listaDestinazioni.isEmpty()) {
                             listaDestinazioni.wait();
                         }
-                        //prendo il lock sulla lista degli autotreni parcheggiati
-                        synchronized(listaAutotreni) {
-                            //controllo che non sia stato riecevuto l'ordine di terminare
-                            //e che esistano autotreni parcheggiati da utilizzare
-                            while(!terminato && listaAutotreni.isEmpty()) {
-                                listaAutotreni.wait();
-                            }
-                            destinazione = listaDestinazioni.poll();
-                            statoConsegne.put(destinazione, false);
-                            autotreno = listaAutotreni.poll();
-                            try {
-                                //controllo che non sia stato riecevuto l'ordine di terminare,
-                                //controllo che la base sia attiva
-                                //in caso contrario la rimuovo dalla lista degli autotreni
-                                if(!terminato && destinazione.stato()) {
-                                    try {
-                                        //controllo che non sia stato riecevuto l'ordine di terminare,
-                                        //controllo che l'autotreno sia attivo
-                                        if(!terminato && autotreno.stato()) {
-                                            //prendo il lock sulla mappa degli ordini in evasione
-                                            synchronized(statoConsegne) {
-                                                //controllo che non sia stato riecevuto l'ordine di terminare,
-                                                //controllo che non sia in corso un ordine verso la stessa destinazione
-                                                while(!terminato && statoConsegne.get(destinazione)) {
-                                                    statoConsegne.wait();
-                                                }
-                                                autotreno.consegnaOrdine(destinazione);
-                                                gui.aggiornaStatoTextArea("Autotreno " 
-                                                        + autotreno.getNomeAutotreno() 
-                                                        + "in partenza per " 
-                                                        + destinazione.getNomeBase());
-                                            }
-                                        }
-                                    } catch(RemoteException e) {
-                                        System.out.println("Errore di comunicazione con "
-                                        + "l'autotreno per la consegna dell'ordine.");
-                                    } finally {
-                                        //segnalo l'errore ed elimino l'autotreno dalle liste
-                                        gui.aggiornaStatoTextArea("In attesa di un nuovo autotreno");
-                                        listaAutotreni.remove(autotreno);
-                                        autotreniAttivi.remove(autotreno);
-                                    }
-                                }
-                            } catch(RemoteException e) {
-                                System.out.println("Errore di comunicazione con la "
-                                        + "base di destinazione.");
-                            } finally {
-                                //segnalo l'errore ed elimino la base dalle liste
-                                //aggiorno l'ultima destinazione
-                                gui.aggiornaStatoTextArea("Ordine annullato.");
-                                listaDestinazioni.remove(destinazione);
-                                statoConsegne.remove(destinazione);
-                                basiAttive.remove(destinazione);
-                            }
+                        destinazione = listaDestinazioni.poll();
+                        aggiornaOrdiniGUI();
+                    }
+
+                    //prendo il lock sulla lista degli autotreni parcheggiati
+                    synchronized(listaAutotreni) {
+                        //controllo che non sia stato riecevuto l'ordine di terminare
+                        //e che esistano autotreni parcheggiati da utilizzare
+                        while(!terminato && listaAutotreni.isEmpty()) {
+                            listaAutotreni.wait();
+                        }
+                        autotreno = listaAutotreni.poll();
+                        aggiornaAutotreniGUI();
+                    }
+/*
+                    //prendo il lock sulla mappa degli ordini in evasione
+                    synchronized(statoConsegne) {
+                        //controllo che non sia stato riecevuto l'ordine di terminare,
+                        //controllo che non sia in corso un ordine verso la stessa destinazione
+                        while(!terminato && !statoConsegne.get(destinazione)) {
+                            statoConsegne.wait();
+                        }
+                        statoConsegne.put(destinazione, true);
+                    }*/
+                    if(!terminato) {
+                        try {
+                            gui.aggiornaStatoTextArea("Autotreno " 
+                                    + autotreno.getNomeAutotreno() 
+                                    + " in partenza per " 
+                                    + destinazione.getNomeBase());
+                            autotreno.consegnaOrdine(destinazione);
+                        } catch(RemoteException e) {
+                            System.out.println("Errore di comunicazione con una base "
+                                    + "o un autotreno");
                         }
                     }
                 } catch(InterruptedException e) {
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
