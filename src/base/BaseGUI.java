@@ -149,7 +149,7 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
     }// </editor-fold>//GEN-END:initComponents
 
     private void terminaAttivitaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_terminaAttivitaButtonActionPerformed
-        base.terminaAttività();
+        base.terminaAttivita();
     }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
 

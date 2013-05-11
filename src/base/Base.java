@@ -97,11 +97,10 @@ public class Base extends UnicastRemoteObject implements IBase {
     }
 
     @Override
-    public void terminaAttività() {
+    public void terminaAttivita() {
         terminato = true;
         gui.aggiornaStatoTextArea("La base ha ricevuto l'ordine di terminare "
                 + "la propria attività");
-        gui.dispose();
         synchronized(listaAutotreni) {
             listaAutotreni.notifyAll();
         }
@@ -111,6 +110,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         synchronized(statoConsegne) {
             statoConsegne.notifyAll();
         }
+        gui.dispose();
         System.exit(0);
     }
     

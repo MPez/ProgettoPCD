@@ -28,9 +28,9 @@ start:
 	sleep 2
 	java base.BaseStarter Nord &
 	java base.BaseStarter Sud &
-	#java base.BaseStarter Ovest &
-	#java base.BaseStarter Est &
+	java base.BaseStarter Ovest &
+	java base.BaseStarter Est &
 	java autotreno.AutotrenoStarter Blue Nord &
 	java autotreno.AutotrenoStarter Green Sud &
-	java autotreno.AutotrenoStarter Red Nord &
-	java autotreno.AutotrenoStarter White Sud
+	java autotreno.AutotrenoStarter Red Ovest &
+	java autotreno.AutotrenoStarter White Est

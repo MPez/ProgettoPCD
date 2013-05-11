@@ -65,7 +65,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         gui.dispose();
         try {
             for(IBase base : basiAttive) {
-                base.terminaAttività();
+                base.terminaAttivita();
             }
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con una base in fase di chiusura");
@@ -229,8 +229,6 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con la base "
                                     + basiNomi.get(partenza));
-                        } finally {
-                            rimuoviBase(partenza);
                         }
                     }
                 } catch(InterruptedException e) {
