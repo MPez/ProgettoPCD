@@ -34,11 +34,17 @@ public class AutotrenoStarter {
         autotreno = new Autotreno(nomeAutotreno, gui);
         gui.setAutotreno(autotreno);
         this.avviaGUI();
+        this.avviaAutotreno();
     }
     
     //metodo che avvia la gui dell'autotreno
     private void avviaGUI() {
         new Thread(gui).start();
+    }
+    
+    //metodo che avvia 
+    private void avviaAutotreno() {
+        new Thread(autotreno.new ConsegnaOrdine()).start();
     }
     
     //metodo che si connette alla ditta per la registrazione dell'autotreno e

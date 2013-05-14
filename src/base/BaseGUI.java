@@ -142,7 +142,7 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
                 .addComponent(statoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(terminaAttivitaButton)
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
 
         pack();
@@ -167,7 +167,7 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
     }
     
     void aggiornaStatoTextArea(String text) {
-        statoTextArea.append(text + ".\n");
+        statoTextArea.append(text + "\n");
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

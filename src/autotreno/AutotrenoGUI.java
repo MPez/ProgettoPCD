@@ -4,11 +4,14 @@
  */
 package autotreno;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 /**
  *
  * @author marco
  */
-public class AutotrenoGUI extends javax.swing.JFrame implements Runnable {
+public class AutotrenoGUI extends javax.swing.JFrame implements Runnable, PropertyChangeListener {
     
     Autotreno autotreno;
 
@@ -164,4 +167,12 @@ public class AutotrenoGUI extends javax.swing.JFrame implements Runnable {
     private javax.swing.JPanel infoAutotrenoPanel;
     private javax.swing.JButton terminaAttivitaButton;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void propertyChange(PropertyChangeEvent pce) {
+        if ("progress" == pce.getPropertyName()) {
+            int progress = (Integer) pce.getNewValue();
+            durataViaggioProgressBar.setValue(progress);
+        } 
+    }
 }

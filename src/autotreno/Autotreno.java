@@ -6,8 +6,12 @@ package autotreno;
 
 import common.IAutotreno;
 import common.IBase;
+import common.IOrdine;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
+import java.util.Random;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -17,12 +21,22 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private String nomeAutotreno;
     private IBase basePartenza;
     private IBase baseDestinazione;
+    private IOrdine ordine;
+    
+    private LinkedList<IOrdine> listaOrdini;
+    
+    private Viaggio viaggio;
     
     private AutotrenoGUI gui;
+    
+    private boolean terminato;
     
     Autotreno(String nomeAutotreno, AutotrenoGUI gui) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
         this.gui = gui;
+        terminato = false;
+        
+        listaOrdini = new LinkedList<>();
     }
     
     void setBasePartenza(IBase partenza) {
@@ -59,26 +73,10 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     }
     
     @Override
-    public void consegnaOrdine(IBase destinazione) {
-        try {
-            //controllo che la base di destinazione sia attiva
-            if(destinazione.stato()){
-                this.setBaseDestinazione(destinazione);
-                int durata = (int) (Math.random())*10000;
-                gui.inizializzaViaggioProgressBar(0, durata);
-                for(int n = 0; n <= durata; n++) {
-                    gui.aggiornaViaggioProgressBar(n);
-                    try {
-                        Thread.currentThread().sleep(2000);
-                    } catch(InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                baseDestinazione.riceviMerce(basePartenza,this);
-            }
-        } catch (RemoteException e) {
-            System.out.println("Errore di comunicazione con la base di "
-                    + "destinazione; impossibile evadere l'ordine");
+    public void registraOrdine(IOrdine ordine) {
+        synchronized(listaOrdini) {
+            listaOrdini.add(ordine);
+            listaOrdini.notify();
         }
     }
     
@@ -96,7 +94,64 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     @Override
     public void terminaAttivita() {
+        terminato = true;
+        synchronized(listaOrdini) {
+            listaOrdini.notify();
+        }
         gui.dispose();
         System.exit(0);
-    } 
+    }
+    
+    class ConsegnaOrdine implements Runnable {
+        @Override
+        public void run() {
+            while(!terminato) {
+                try {
+                    //prendo il lock sulla lista degli ordini
+                    //che conterrà al più un ordine alla volta
+                    synchronized(listaOrdini) {
+                        while(!terminato && listaOrdini.isEmpty()) {
+                            listaOrdini.wait(); 
+                        }
+                        if(!terminato) {
+                            ordine = listaOrdini.poll();
+                            try {
+                                baseDestinazione = ordine.getBaseDestinazione();
+                                eseguiViaggio();
+                                baseDestinazione.riceviMerce(ordine);
+                            } catch(RemoteException e) {
+                                System.out.println("Errore di comunicazione con la base "
+                                        + "di destinazione");
+                            }
+                        }
+                    }
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    private void eseguiViaggio() {
+        viaggio = new Viaggio();
+        viaggio.addPropertyChangeListener(gui);
+        viaggio.execute();
+    }
+    
+    class Viaggio extends SwingWorker<Void, Void> {
+        @Override
+        protected Void doInBackground() throws Exception {
+            Random random = new Random();
+            int progress = 0;
+            setProgress(0);
+            while (progress < 100) {
+                try {
+                    Thread.sleep(random.nextInt(1000));
+                } catch (InterruptedException ignore) {}
+                progress += random.nextInt(10);
+                setProgress(Math.min(progress, 100));
+            }
+            return null;
+        }
+    }
 }

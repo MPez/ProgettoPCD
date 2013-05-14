@@ -4,7 +4,6 @@
  */
 package common;
 
-import common.IAutotreno;
 import java.rmi.*;
 
 /**
@@ -13,9 +12,9 @@ import java.rmi.*;
  */
 public interface IBase extends Remote {
     String getNomeBase() throws RemoteException;
-    void registraOrdine(IBase destinazione) throws RemoteException;
-    void ordineConsegnato(IBase destinazione) throws RemoteException;
-    void riceviMerce(IBase partenza, IAutotreno autotreno) throws RemoteException;
+    void registraOrdine(IOrdine ordine) throws RemoteException;
+    void ordineConsegnato(IOrdine ordine) throws RemoteException;
+    void riceviMerce(IOrdine ordine) throws RemoteException;
     void parcheggiaAutotreno(IAutotreno autotreno) throws RemoteException;
     boolean stato() throws RemoteException;
     void terminaAttivita() throws RemoteException;

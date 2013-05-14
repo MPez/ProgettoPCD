@@ -7,6 +7,10 @@ package ditta;
 import common.IAutotreno;
 import common.IBase;
 import common.IDitta;
+import common.IOrdine;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -31,6 +35,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
     
     private boolean terminato;
     
+    private static final String HOST = "localhost:";
+    
     Ditta(DittaGUI gui) throws RemoteException {
         basiAttive = new LinkedList<>();
         nomiBasi = new HashMap<>();
@@ -53,29 +59,44 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         baseDestinazione = nomiBasi.get(destinazione);
         
         synchronized(elencoOrdini) {
-            elencoOrdini.add(this.new Ordine(basePartenza, baseDestinazione, quantita));
+            try {
+                for(int i = 0; i < quantita; i++) {
+                    elencoOrdini.add(new Ordine(basePartenza, baseDestinazione));
+                    gui.aggiornaStatoTextArea("Ricevuto ordine da " + partenza 
+                            + " a " + destinazione);
+                }
+            } catch(RemoteException e) {
+                System.out.println("Errore durante la creazione di un nuovo ordine");
+            }
             elencoOrdini.notify();
         }
-        gui.aggiornaStatoTextArea("Ricevuto ordine da " + partenza + " a "
-                + destinazione + " da eseguirsi n°" + quantita + " volta/e");
     }
     
     void terminaAttivita() {
         terminato = true;
         gui.dispose();
-        try {
-            for(IBase base : basiAttive) {
+        for(IBase base : basiAttive) {
+            try {
                 base.terminaAttivita();
+            } catch(RemoteException e) {
+                System.out.println("Errore di comunicazione con una base in "
+                        + "fase di chiusura");
             }
-        } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con una base in fase di chiusura");
+        }
+        for(IAutotreno autotreno : autotreniAttivi) {
+            try {
+                autotreno.terminaAttivita();
+            } catch(RemoteException e) {
+                System.out.println("Errore di comunicazione con un autotreno "
+                        + "in fase di chiusura");
+            }
         }
         try {
-            for(IAutotreno autotreno : autotreniAttivi) {
-                autotreno.terminaAttivita();
-            }
-        } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un autotreno in fase di chiusura");
+            String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
+            Naming.unbind(rmiNomeDitta);
+        } catch( RemoteException | MalformedURLException | NotBoundException e) {
+            System.out.println("Errore nella cancellazione della registrazione "
+                    + "della ditta dal registro RMI");
         }
         System.exit(0);
     }
@@ -141,16 +162,20 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
     }
 
     @Override
-    public void notificaEsito(IBase partenza, IBase destinazione, IAutotreno autotreno, boolean esito) {
+    public void notificaEsito(IOrdine ordine) {
         String text = "";
-        if(!esito) {
-            text = "NON ";
+        try {
+            if(!ordine.getConsegnato()) {
+                text = "NON ";
+            }
+            gui.aggiornaStatoTextArea("Ordine proveniente da " 
+                    + basiNomi.get(ordine.getBasePartenza()) + " e diretto verso "
+                    + basiNomi.get(ordine.getBaseDestinazione()) + " " + text 
+                    + " è stato consegnato da "
+                    + autotreniNomi.get(ordine.getAutotreno()));
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con un ordine consegnato");
         }
-        gui.aggiornaStatoTextArea("Ordine proveniente da " 
-                + basiNomi.get(partenza) + " e diretto verso "
-                + basiNomi.get(destinazione) + " " + text 
-                + " è stato consegnato da "
-                + autotreniNomi.get(autotreno));
     }
 
     @Override
@@ -180,34 +205,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         }
     }
     
-    class Ordine {
-        private IBase partenza;
-        private IBase destinazione;
-        private int quantita;
-        
-        Ordine (IBase partenza, IBase destinazione, int quantita) {
-            this.partenza = partenza;
-            this.destinazione = destinazione;
-            this.quantita = quantita;
-        }
-        
-        IBase getBasePartenza() {
-            return partenza;
-        }
-        
-        IBase getBaseDestinazione() {
-            return destinazione;
-        }
-        
-        int getQuantita() {
-            return quantita;
-        }
-    }
-    
     class InviaOrdini implements Runnable {
         private IBase partenza;
-        private IBase destinazione;
-        private int quantita;
         private Ordine ordine;
         
         @Override
@@ -220,12 +219,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
                         }
                         ordine = elencoOrdini.poll();
                         partenza = ordine.getBasePartenza();
-                        destinazione = ordine.getBaseDestinazione();
-                        quantita = ordine.getQuantita();
                         try {
-                            for(int i = 1; i <= quantita; i++) {
-                                partenza.registraOrdine(destinazione);
-                            }
+                            partenza.registraOrdine(ordine);
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con la base "
                                     + basiNomi.get(partenza));
