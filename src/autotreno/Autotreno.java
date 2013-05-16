@@ -30,13 +30,15 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private AutotrenoGUI gui;
     
     private boolean terminato;
+    private boolean viaggioEseguito;
     
     Autotreno(String nomeAutotreno, AutotrenoGUI gui) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
         this.gui = gui;
         terminato = false;
+        viaggioEseguito = false;
         
-        listaOrdini = new LinkedList<>();
+        listaOrdini = new LinkedList<IOrdine>();
     }
     
     void setBasePartenza(IBase partenza) {
@@ -118,6 +120,9 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                             try {
                                 baseDestinazione = ordine.getBaseDestinazione();
                                 eseguiViaggio();
+                                while(!viaggioEseguito) {
+                                    Thread.currentThread().sleep(1000);
+                                }
                                 baseDestinazione.riceviMerce(ordine);
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con la base "
@@ -140,18 +145,24 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     class Viaggio extends SwingWorker<Void, Void> {
         @Override
-        protected Void doInBackground() throws Exception {
+        protected Void doInBackground() {
             Random random = new Random();
             int progress = 0;
             setProgress(0);
             while (progress < 100) {
                 try {
-                    Thread.sleep(random.nextInt(1000));
+                    Thread.sleep(random.nextInt(300));
                 } catch (InterruptedException ignore) {}
                 progress += random.nextInt(10);
                 setProgress(Math.min(progress, 100));
             }
             return null;
+        }
+        
+        @Override
+        public void done() {
+            viaggioEseguito = true;
+            setProgress(0);
         }
     }
 }

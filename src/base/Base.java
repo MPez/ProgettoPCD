@@ -30,9 +30,9 @@ public class Base extends UnicastRemoteObject implements IBase {
     private boolean terminato;
 
     Base(String nomeBase, BaseGUI gui, IDitta ditta) throws RemoteException {
-        listaOrdini = new LinkedList<>();
-        listaAutotreni = new LinkedList<>();
-        statoConsegne = new HashMap<>();
+        listaOrdini = new LinkedList<IOrdine>();
+        listaAutotreni = new LinkedList<IAutotreno>();
+        statoConsegne = new HashMap<String, Boolean>();
         
         
         this.nomeBase = nomeBase;
@@ -58,9 +58,8 @@ public class Base extends UnicastRemoteObject implements IBase {
         //solo se non è presente nell'elenco
         synchronized(statoConsegne) {
             try {
-                String nomeBase = ordine.getBaseDestinazione().getNomeBase();
-                if(!statoConsegne.containsKey(nomeBase)) {
-                    statoConsegne.put(nomeBase, false);
+                if(!statoConsegne.containsKey(ordine.getBaseDestinazione().getNomeBase())) {
+                    statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
                 }
             } catch(RemoteException e) {
                 System.out.println("Errore di comunicazione con la base di destinazione");
@@ -163,8 +162,8 @@ public class Base extends UnicastRemoteObject implements IBase {
         String text = "";
         for(IOrdine ordine : listaOrdini) {
             try {
-                text += ordine.getNumeroOrdine() + ": "
-                        + ordine.getBaseDestinazione() + "\n";
+                text += ((Integer)ordine.getNumeroOrdine()).toString() + ": "
+                        + ordine.getBaseDestinazione().getNomeBase() + "\n";
             } catch(RemoteException e) {
                 System.out.println("Errore di comunicazione con un ordine");
             }
@@ -188,13 +187,15 @@ public class Base extends UnicastRemoteObject implements IBase {
                         while(!terminato && listaOrdini.isEmpty()) {
                             listaOrdini.wait();
                         }
-                        try {
-                            ordine = listaOrdini.poll();
-                            destinazione = ordine.getBaseDestinazione();
-                        } catch(RemoteException e) {
-                            System.out.println("Errore di comunicazione con un ordine");
+                        if(!terminato) {
+                            try {
+                                ordine = listaOrdini.poll();
+                                destinazione = ordine.getBaseDestinazione();
+                            } catch(RemoteException e) {
+                                System.out.println("Errore di comunicazione con un ordine");
+                            }
+                            aggiornaOrdiniGUI();
                         }
-                        aggiornaOrdiniGUI();
                     }
 
                     //prendo il lock sulla lista degli autotreni parcheggiati
@@ -204,23 +205,27 @@ public class Base extends UnicastRemoteObject implements IBase {
                         while(!terminato && listaAutotreni.isEmpty()) {
                             listaAutotreni.wait();
                         }
-                        try {
-                            autotreno = listaAutotreni.poll();
-                            ordine.setAutotreno(autotreno);
-                        } catch(RemoteException e) {
-                            System.out.println("Errore di connessione con un ordine");
+                        if(!terminato) {
+                            try {
+                                autotreno = listaAutotreni.poll();
+                                ordine.setAutotreno(autotreno);
+                            } catch(RemoteException e) {
+                                System.out.println("Errore di connessione con un ordine");
+                            }
+                            aggiornaAutotreniGUI();
                         }
-                        aggiornaAutotreniGUI();
                     }
                     //prendo il lock sulla mappa degli ordini in evasione
                     synchronized(statoConsegne) {
                         //controllo che non sia stato riecevuto l'ordine di terminare,
                         //controllo che non sia in corso un ordine verso la stessa destinazione
                         try {
-                            while(!terminato && !statoConsegne.get(ordine.getBaseDestinazione().getNomeBase())) {
+                            while(!terminato && statoConsegne.get(destinazione.getNomeBase())) {
                                 statoConsegne.wait();
                             }
-                            statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), true);
+                            if(!terminato) {
+                                statoConsegne.put(destinazione.getNomeBase(), true);
+                            }
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con la base di destinazione");
                         }

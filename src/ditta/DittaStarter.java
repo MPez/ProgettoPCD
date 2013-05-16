@@ -29,11 +29,11 @@ public class DittaStarter {
         try {
             String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
             Naming.rebind(rmiNomeDitta, ditta);
-        } catch( RemoteException | MalformedURLException e) {
-            System.out.println("Errore nella registrazione della ditta con il registro RMI.");
+        } catch(RemoteException e) {
+            System.out.println("Errore nella registrazione della ditta con il registro RMI");
+        } catch(MalformedURLException e1) {
+            e1.printStackTrace();
         }
-        
-        
     }
     
     private void avviaGUI() {
@@ -48,7 +48,7 @@ public class DittaStarter {
         try {
             new DittaStarter();
         } catch(RemoteException e) {
-            System.out.println("Errore di connessione nella creazione della ditta.");
+            System.out.println("Errore di connessione nella creazione della ditta");
         }
     }
 }

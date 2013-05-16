@@ -166,7 +166,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     private void inviaOrdineButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inviaOrdineButtonActionPerformed
         String partenza = (String) basePartenzaComboBox.getSelectedItem();
         String destinazione = (String) baseDestinazioneComboBox.getSelectedItem();
-        int quantita = (int) quantitaOrdiniSpinner.getValue();
+        int quantita = (Integer) quantitaOrdiniSpinner.getValue();
         
         if(!partenza.equals(destinazione)) {
             ditta.inserisciOrdine(partenza, destinazione, quantita);

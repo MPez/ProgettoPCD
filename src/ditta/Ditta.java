@@ -38,15 +38,15 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
     private static final String HOST = "localhost:";
     
     Ditta(DittaGUI gui) throws RemoteException {
-        basiAttive = new LinkedList<>();
-        nomiBasi = new HashMap<>();
-        basiNomi = new HashMap<>();
+        basiAttive = new LinkedList<IBase>();
+        nomiBasi = new HashMap<String, IBase>();
+        basiNomi = new HashMap<IBase, String>();
         
-        autotreniAttivi = new LinkedList<>();
-        nomiAutotreni = new HashMap<>();
-        autotreniNomi = new HashMap<>();
+        autotreniAttivi = new LinkedList<IAutotreno>();
+        nomiAutotreni = new HashMap<String, IAutotreno>();
+        autotreniNomi = new HashMap<IAutotreno, String>();
         
-        elencoOrdini = new LinkedList<>();
+        elencoOrdini = new LinkedList<Ordine>();
         
         this.gui = gui;
         terminato = false;
@@ -94,9 +94,13 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         try {
             String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
             Naming.unbind(rmiNomeDitta);
-        } catch( RemoteException | MalformedURLException | NotBoundException e) {
+        } catch(RemoteException e) {
             System.out.println("Errore nella cancellazione della registrazione "
                     + "della ditta dal registro RMI");
+        } catch(MalformedURLException e1) {
+            e1.printStackTrace();
+        } catch(NotBoundException e2) {
+            e2.printStackTrace();
         }
         System.exit(0);
     }
