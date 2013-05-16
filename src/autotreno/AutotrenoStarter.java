@@ -31,7 +31,7 @@ public class AutotrenoStarter {
         }
         
         gui = new AutotrenoGUI(nomeAutotreno);
-        autotreno = new Autotreno(nomeAutotreno, gui);
+        autotreno = new Autotreno(nomeAutotreno, gui, ditta);
         gui.setAutotreno(autotreno);
         this.avviaGUI();
         this.avviaAutotreno();

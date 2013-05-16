@@ -20,7 +20,7 @@ import java.util.LinkedList;
  *
  * @author marco
  */
-public class Ditta extends UnicastRemoteObject implements IDitta{
+public class Ditta extends UnicastRemoteObject implements IDitta {
     private LinkedList<IBase> basiAttive;
     private HashMap<String, IBase> nomiBasi;
     private HashMap<IBase, String> basiNomi;
@@ -51,13 +51,16 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         this.gui = gui;
         terminato = false;
     }
-
+    
+    //metodo utilizzato per inserire nuovi ordini creati dalla GUI
     void inserisciOrdine(String partenza, String destinazione, int quantita) {
         IBase basePartenza;
         IBase baseDestinazione;
         basePartenza = nomiBasi.get(partenza);
         baseDestinazione = nomiBasi.get(destinazione);
         
+        //prendo il lock sull'elenco degli ordini
+        //aggiungo un ordine fino al raggiungimento della quantità desiderata
         synchronized(elencoOrdini) {
             try {
                 for(int i = 0; i < quantita; i++) {
@@ -72,25 +75,84 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         }
     }
     
+    //thread che controlla ogni 10s che le basi siano attive
+    private class ControllaBasi implements Runnable {
+        @Override
+        public void run() {
+            while(!terminato) {
+                //prendo il lock sulla lista di basi attive
+                //controllo che le basi esistano, altrimenti le cancello dall'elenco
+                synchronized(basiAttive) {
+                    if(!terminato) {
+                        for(IBase base : basiAttive) {
+                            try {
+                                base.stato();
+                            } catch(RemoteException e) {
+                                System.out.println("La base " + basiNomi.get(base)
+                                        + " non è più attiva");
+                                aggiornaBasiAttive(base);
+                            }
+                        }
+                    }
+                }
+                try {
+                    Thread.currentThread().sleep(10000);
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    //thread che controlla ogni 10s che gli autotreni siano attivi
+    private class ControllaAutotreni implements Runnable{
+        @Override
+        public void run() {
+            while(!terminato) {
+                //prendo il lock sulla  lista degli autotreni attivi
+                //controllo che gli autotreni esistano, altrimenti li cancello dall'elenco
+                synchronized(autotreniAttivi) {
+                    if(!terminato) {
+                        for(IAutotreno autotreno : autotreniAttivi) {
+                            try {
+                                autotreno.stato();
+                            } catch(RemoteException e) {
+                                System.out.println("L'autotreno " 
+                                        + autotreniNomi.get(autotreno)
+                                        + " non è più attivo");
+                                aggiornaAutotreniAttivi(autotreno);
+                            }
+                        }
+                    }
+                }
+                try {
+                    Thread.currentThread().sleep(10000);
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    //metodo che termina l'attività di tutte le basi e di tutti gli autotreni attivi
+    //termina l'attività della ditta di trasporti
     void terminaAttivita() {
         terminato = true;
+        //chiudo l'interfaccia utente
         gui.dispose();
+        //termina tutte le basi
         for(IBase base : basiAttive) {
             try {
                 base.terminaAttivita();
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con una base in "
-                        + "fase di chiusura");
-            }
+            } catch(RemoteException ignore) {}
         }
+        //termina tutti gli autotreni
         for(IAutotreno autotreno : autotreniAttivi) {
             try {
                 autotreno.terminaAttivita();
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un autotreno "
-                        + "in fase di chiusura");
-            }
+            } catch(RemoteException ignore) {}
         }
+        //rimuove dal registro RMI la ditta di trasporti
         try {
             String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
             Naming.unbind(rmiNomeDitta);
@@ -102,14 +164,20 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         } catch(NotBoundException e2) {
             e2.printStackTrace();
         }
+        //chiudo la ditta
         System.exit(0);
     }
     
+    //metodo chiamato da una base in fase di registrazione
     @Override
     public void registraBase(IBase base) {
+        //prendo il lock sulla lista delle basi attive
+        //aggiungo la nuova base
         synchronized(basiAttive) {
             basiAttive.add(base);
         }
+        //prendo il lock sulla mappa dei nomi delle basi
+        //aggiorno la mappa dei nomi delle basi
         synchronized(nomiBasi) {
             try {
                 nomiBasi.put(base.getNomeBase(), base);
@@ -119,6 +187,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
                         + "di registrazione");
             }
         }
+        //aggiorno la mappa delle basi
         synchronized(basiNomi) {
             try {
                 basiNomi.put(base, base.getNomeBase());
@@ -127,17 +196,23 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
                         + "di registrazione");
             }
         }
+        //aggiorno i combo box della gui che contengono le basi
         gui.aggiungiBaseComboBox(basiNomi.get(base));
+        //avvio il thread che controlla l'esistenza delle basi
+        new Thread(this.new ControllaBasi()).start();
     }
-
+    //metodo chiamato da un autotreno in fase di registrazione
     @Override
     public IBase registraAutotreno(IAutotreno autotreno, String nomeBasePartenza) {
         IBase partenza = null;
         try {
+            //prendo il lock sulla mappa dei nomi delle basi
+            //controllo che la base richiesta dall'autoreno sia già registrata
             synchronized(nomiBasi) {
                 while(!nomiBasi.containsKey(nomeBasePartenza)) {
                     nomiBasi.wait();
                 }
+                //prendo il lock sulla lista di autotreni attivi
                 synchronized(autotreniAttivi) {
                     autotreniAttivi.add(autotreno);
                 }
@@ -146,6 +221,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
+        //prendo il lock sulla mappa dei nomi degli autotreni
+        //aggiorno la mappa dei nomi delgi autotreni
         synchronized(nomiAutotreni) {
             try {
                 nomiAutotreni.put(autotreno.getNomeAutotreno(), autotreno);
@@ -154,6 +231,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
                         + "fase di registrazione");
             }
         }
+        //prendo il lock sulla mappa degli autotreni
+        //aggiorno la mappa degli autotreni
         synchronized(autotreniNomi) {
             try {
                 autotreniNomi.put(autotreno, autotreno.getNomeAutotreno());
@@ -162,9 +241,12 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
                         + "fase di registrazione");
             }
         }
+        //avvio il thread che controlla l'esistenza degli autotreni
+        new Thread(this.new ControllaAutotreni()).start();
         return partenza;
     }
 
+    //metodo chiamato da una base al momento della ricezione di un ordine
     @Override
     public void notificaEsito(IOrdine ordine) {
         String text = "";
@@ -182,13 +264,15 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         }
     }
 
+    //metodo che aggiorna la lista delle basi attive
     @Override
-    public void aggiornaBasiAttive(IBase base) throws RemoteException {
+    public void aggiornaBasiAttive(IBase base) {
         rimuoviBase(base);
         gui.aggiornaStatoTextArea("La base " + basiNomi.get(base)
                 + " non è più attiva");
     }
     
+    //metodo che rimuove una base dalla lista delle basi attive
     private void rimuoviBase(IBase base) {
         synchronized(basiAttive) {
             basiAttive.remove(base);
@@ -196,19 +280,29 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         gui.rimuoviBaseComboBox(basiNomi.get(base));
     }
 
+    //metodo che aggiorna la lista degli autotreni attivi
     @Override
-    public void aggiornaAutotreniAttivi(IAutotreno autotreno) throws RemoteException {
+    public void aggiornaAutotreniAttivi(IAutotreno autotreno) {
         rimuoviAutotreno(autotreno);
         gui.aggiornaStatoTextArea("L'autotreno " + autotreniNomi.get(autotreno)
                 + " non è più attivo");
     }
     
+    //metodo che rimuove un autotreno dalla lista degli autotreni attivi
     private void rimuoviAutotreno(IAutotreno autotreno) {
         synchronized(autotreniAttivi) {
             autotreniAttivi.remove(autotreno);
         }
     }
     
+    //metodo chiamato da un autotreno quando la base in cui era parcheggiato cessa la propria attività
+    @Override
+    public IBase impostaNuovaBase(IAutotreno autotreno) throws RemoteException {
+        IBase base = basiAttive.getLast();
+        return base;
+    }
+    
+    //thread che gestisce l'invio degli ordini alle rispettive basi
     class InviaOrdini implements Runnable {
         private IBase partenza;
         private Ordine ordine;
@@ -217,6 +311,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta{
         public void run() {
             while(!terminato) {
                 try {
+                    //prendo il lock sull'elenco degli ordini e controllo che non sia vuoto
                     synchronized(elencoOrdini) {
                         while(!terminato && elencoOrdini.isEmpty()) {
                             elencoOrdini.wait();

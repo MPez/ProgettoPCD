@@ -6,6 +6,7 @@ package autotreno;
 
 import common.IAutotreno;
 import common.IBase;
+import common.IDitta;
 import common.IOrdine;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -28,13 +29,15 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private Viaggio viaggio;
     
     private AutotrenoGUI gui;
+    private IDitta ditta;
     
     private boolean terminato;
     private boolean viaggioEseguito;
     
-    Autotreno(String nomeAutotreno, AutotrenoGUI gui) throws RemoteException {
+    Autotreno(String nomeAutotreno, AutotrenoGUI gui, IDitta ditta) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
         this.gui = gui;
+        this.ditta = ditta;
         terminato = false;
         viaggioEseguito = false;
         
@@ -90,6 +93,21 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     }
     
     @Override
+    public void aggiornaBasePartenza() throws RemoteException {
+        IBase base = null;
+        try {
+            base = ditta.impostaNuovaBase(this);
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con la ditta di trasporti");
+        }
+        try {
+            base.parcheggiaAutotreno(this);
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con la base di destinazione");
+        }
+    }
+    
+    @Override
     public boolean stato() {
         return true;
     }
@@ -118,7 +136,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                         if(!terminato) {
                             ordine = listaOrdini.poll();
                             try {
-                                baseDestinazione = ordine.getBaseDestinazione();
+                                setBaseDestinazione(ordine.getBaseDestinazione());
                                 eseguiViaggio();
                                 while(!viaggioEseguito) {
                                     Thread.currentThread().sleep(1000);

@@ -16,6 +16,7 @@ public interface IBase extends Remote {
     void ordineConsegnato(IOrdine ordine) throws RemoteException;
     void riceviMerce(IOrdine ordine) throws RemoteException;
     void parcheggiaAutotreno(IAutotreno autotreno) throws RemoteException;
+    void aggiornaListaAutotreni(IAutotreno autotreno) throws RemoteException;
     boolean stato() throws RemoteException;
     void terminaAttivita() throws RemoteException;
 }

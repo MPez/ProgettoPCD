@@ -34,7 +34,6 @@ public class Base extends UnicastRemoteObject implements IBase {
         listaAutotreni = new LinkedList<IAutotreno>();
         statoConsegne = new HashMap<String, Boolean>();
         
-        
         this.nomeBase = nomeBase;
         this.gui = gui;
         this.ditta = ditta;
@@ -47,6 +46,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         return nomeBase;
     }
 
+    //metodo chiamato dalla ditta di trasporti per registrare un nuovo ordine
     @Override
     public void registraOrdine(IOrdine ordine) {
         //prendo il lock sulla lista degli ordini per aggiungere quello in arrivo
@@ -74,15 +74,31 @@ public class Base extends UnicastRemoteObject implements IBase {
         aggiornaOrdiniGUI();
     }
     
+    //metodo chiamato dalla base di destinazione dell'ordine alla consegna dell'ordine
     @Override
-    public void ordineConsegnato(IOrdine ordine) throws RemoteException {
+    public void ordineConsegnato(IOrdine ordine) {
         //prendo il lock sullo stato delle consegne per aggiornare l'avvenuta consegna
         synchronized(statoConsegne) {
-            statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
+            try {
+                statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
+            } catch(RemoteException e) {
+                System.out.println("Errore di comunicazione con un ordine");
+            }
             statoConsegne.notify();
+        }
+        try {
+            ordine.setConsegnato(true);
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con un ordine");
+        }
+        try {
+            ditta.notificaEsito(ordine);
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con la ditta di trasporti");
         }
     }
 
+    //metodo chiamato dall'autotreno che effettua l'ordine
     @Override
     public void riceviMerce(IOrdine ordine) {
         try {
@@ -99,21 +115,35 @@ public class Base extends UnicastRemoteObject implements IBase {
         }
     }
 
+    //metodo chiamato dalla base di destinazione per parcheggiare l'autotreno
     @Override
     public void parcheggiaAutotreno(IAutotreno autotreno) {
         parcheggia(autotreno);
     }
     
+    //metodo chiamato dalla ditta quando un autotreno cessa la propria attività
+    @Override
+    public void aggiornaListaAutotreni(IAutotreno autotreno) throws RemoteException {
+        synchronized(listaAutotreni) {
+            listaAutotreni.remove(autotreno);
+        }
+        aggiornaAutotreniGUI();
+    }
+    
+    //metodo chiamato dalla ditta per testare l'attività di una base
     @Override
     public boolean stato()  {
         return true;
     }
 
+    //metodo che termina l'attività della base
     @Override
     public void terminaAttivita() {
         terminato = true;
         gui.aggiornaStatoTextArea("La base ha ricevuto l'ordine di terminare "
                 + "la propria attività");
+        //prendo il lock sulle liste di autotreni, ordini e consegne
+        //risveglio gli eventuali thread in attesa
         synchronized(listaAutotreni) {
             listaAutotreni.notifyAll();
         }
@@ -123,10 +153,13 @@ public class Base extends UnicastRemoteObject implements IBase {
         synchronized(statoConsegne) {
             statoConsegne.notifyAll();
         }
+        //chiudo l'interfaccia grafica
         gui.dispose();
+        //chiudo la base
         System.exit(0);
     }
     
+    //metodo che parcheggia l'autotreno in arrivo e lo aggiunge alla lista
     private void parcheggia(IAutotreno autotreno) {
         synchronized(listaAutotreni) {
             listaAutotreni.add(autotreno);

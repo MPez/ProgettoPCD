@@ -16,4 +16,5 @@ public interface IDitta extends Remote{
     void notificaEsito(IOrdine ordine) throws RemoteException;
     void aggiornaBasiAttive(IBase base) throws RemoteException;
     void aggiornaAutotreniAttivi(IAutotreno autotreno) throws RemoteException;
+    IBase impostaNuovaBase(IAutotreno autotreno) throws RemoteException;
 }
