@@ -91,6 +91,19 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                 System.out.println("La base " + basiNomi.get(base)
                                         + " non è più attiva");
                                 aggiornaBasiAttive(base);
+                                //aggiorno le basi di partenza degli autotreni
+                                //in quanto potrebbero essere parcheggiati presso
+                                //la base che non è più attiva
+                                for(IAutotreno autotreno : autotreniAttivi) {
+                                    try {
+                                        autotreno.aggiornaBasePartenza();
+                                    } catch(RemoteException e1) {
+                                        System.out.println("Errore di comunicazione"
+                                                + "con l'autotreno "
+                                                + autotreniNomi.get(autotreno));
+                                        aggiornaAutotreniAttivi(autotreno);
+                                    }
+                                }
                             }
                         }
                     }
@@ -121,6 +134,16 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                         + autotreniNomi.get(autotreno)
                                         + " non è più attivo");
                                 aggiornaAutotreniAttivi(autotreno);
+                                for(IBase base : basiAttive) {
+                                    try {
+                                        base.aggiornaListaAutotreni(autotreno);
+                                    } catch(RemoteException e1) {
+                                        System.out.println("Errore di comunicazione "
+                                                + "con la base "
+                                                + basiNomi.get(base));
+                                        aggiornaBasiAttive(base);
+                                    }
+                                }
                             }
                         }
                     }
@@ -323,6 +346,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con la base "
                                     + basiNomi.get(partenza));
+                            aggiornaBasiAttive(partenza);
                         }
                     }
                 } catch(InterruptedException e) {

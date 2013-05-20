@@ -179,6 +179,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         aggiornaAutotreniGUI();
     }
     
+    //metodo che aggiorna la lista degli autotreni sulla GUI
     private void aggiornaAutotreniGUI() {
         String text = "";
         for(IAutotreno autotreno : listaAutotreni) {
@@ -191,6 +192,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         gui.setAutotreniTextArea(text);
     }
     
+    //metodo che aggiorna la lista degli ordini sulla GUI
     private void aggiornaOrdiniGUI() {
         String text = "";
         for(IOrdine ordine : listaOrdini) {
@@ -204,6 +206,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         gui.setOrdiniTextArea(text);
     }
     
+    //thread che gestisce la consegna degli ordini ricevuti
     class ConsegnaOrdine implements Runnable {
         private IOrdine ordine;
         private IBase destinazione;
@@ -227,7 +230,6 @@ public class Base extends UnicastRemoteObject implements IBase {
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con un ordine");
                             }
-                            aggiornaOrdiniGUI();
                         }
                     }
 
@@ -245,7 +247,6 @@ public class Base extends UnicastRemoteObject implements IBase {
                             } catch(RemoteException e) {
                                 System.out.println("Errore di connessione con un ordine");
                             }
-                            aggiornaAutotreniGUI();
                         }
                     }
                     //prendo il lock sulla mappa degli ordini in evasione
@@ -269,6 +270,8 @@ public class Base extends UnicastRemoteObject implements IBase {
                                     + autotreno.getNomeAutotreno() 
                                     + " in partenza per " 
                                     + destinazione.getNomeBase());
+                            aggiornaOrdiniGUI();
+                            aggiornaAutotreniGUI();
                             autotreno.registraOrdine(ordine);
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con una base "

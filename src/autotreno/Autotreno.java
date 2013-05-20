@@ -44,6 +44,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         listaOrdini = new LinkedList<IOrdine>();
     }
     
+    //metodo che imposta la base di partenza e aggiorna la GUI
     void setBasePartenza(IBase partenza) {
         this.basePartenza = partenza;
         try{
@@ -58,6 +59,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         return basePartenza;
     }
     
+    //metodo che imposta la base di destinazione e aggiorna la GUI
     void setBaseDestinazione(IBase destinazione) {
         this.baseDestinazione = destinazione;
         try{
@@ -77,6 +79,8 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         return nomeAutotreno;
     }
     
+    //metodo chiamato dalla ditta di trasporti
+    //inserisce un nuovo ordine nella lista degli ordini
     @Override
     public void registraOrdine(IOrdine ordine) {
         synchronized(listaOrdini) {
@@ -85,33 +89,42 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         }
     }
     
+    //metodo chiamato dalla base di destinazione al momento dell'arrivo dell'ordine
     @Override
     public void parcheggiaAutotreno(IBase destinazione) {
-        basePartenza = destinazione;
-        setBasePartenza(basePartenza);
+        setBasePartenza(destinazione);
         gui.setDestinazioneTextField("");
     }
     
+    //metodo chiamato dalla ditta di trasporti quando la base dove è parcheggiato 
+    //l'autotreno non è più attiva
+    //richiede una nuova base dove parcheggiarsi
     @Override
     public void aggiornaBasePartenza() throws RemoteException {
-        IBase base = null;
         try {
-            base = ditta.impostaNuovaBase(this);
+            if(basePartenza.stato()) {}
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la ditta di trasporti");
-        }
-        try {
-            base.parcheggiaAutotreno(this);
-        } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la base di destinazione");
+            IBase base = null;
+            try {
+                base = ditta.impostaNuovaBase(this);
+            } catch(RemoteException e1) {
+                System.out.println("Errore di comunicazione con la ditta di trasporti");
+            }
+            try {
+                base.parcheggiaAutotreno(this);
+            } catch(RemoteException e2) {
+                System.out.println("Errore di comunicazione con la base di destinazione");
+            }
         }
     }
     
+    //metodo chiamato dalla ditta per testare l'attività di un autotreno
     @Override
     public boolean stato() {
         return true;
     }
     
+    //metodo che termina l'attività dell'autotreno
     @Override
     public void terminaAttivita() {
         terminato = true;
@@ -122,6 +135,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         System.exit(0);
     }
     
+    //thread che gestisce la consegna degli ordini ricevuti
     class ConsegnaOrdine implements Runnable {
         @Override
         public void run() {
@@ -142,6 +156,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                                     Thread.currentThread().sleep(1000);
                                 }
                                 baseDestinazione.riceviMerce(ordine);
+                                viaggioEseguito = false;
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con la base "
                                         + "di destinazione");
@@ -155,12 +170,16 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         }
     }
     
+    //metodo che crea un thread worker usato per animare la barra di scorrimento
+    //presente nella GUI che rappresenta la durata del viaggio
     private void eseguiViaggio() {
         viaggio = new Viaggio();
         viaggio.addPropertyChangeListener(gui);
         viaggio.execute();
     }
     
+    //thread che aggiorna la barra di scorrimento presente nella GUI
+    //rappresenta la durata del viaggio dell'autotreno
     class Viaggio extends SwingWorker<Void, Void> {
         @Override
         protected Void doInBackground() {
