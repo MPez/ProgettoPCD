@@ -110,10 +110,17 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
             } catch(RemoteException e1) {
                 System.out.println("Errore di comunicazione con la ditta di trasporti");
             }
-            try {
-                base.parcheggiaAutotreno(this);
-            } catch(RemoteException e2) {
-                System.out.println("Errore di comunicazione con la base di destinazione");
+            //controlla che sia disponibile almeno una base
+            //altrimenti termino l'attività
+            if(base != null) {
+                try {
+                    base.parcheggiaAutotreno(this);
+                } catch(RemoteException e2) {
+                    System.out.println("Errore di comunicazione con la base di destinazione");
+                }
+            }
+            else {
+                terminaAttivita();
             }
         }
     }

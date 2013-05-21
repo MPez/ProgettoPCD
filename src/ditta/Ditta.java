@@ -21,11 +21,11 @@ import java.util.LinkedList;
  * @author marco
  */
 public class Ditta extends UnicastRemoteObject implements IDitta {
-    private LinkedList<IBase> basiAttive;
+    private HashMap<IBase, Boolean> basiAttive;
     private HashMap<String, IBase> nomiBasi;
     private HashMap<IBase, String> basiNomi;
     
-    private LinkedList<IAutotreno> autotreniAttivi;
+    private HashMap<IAutotreno, Boolean> autotreniAttivi;
     private HashMap<String, IAutotreno> nomiAutotreni;
     private HashMap<IAutotreno, String> autotreniNomi;
     
@@ -38,11 +38,11 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     private static final String HOST = "localhost:";
     
     Ditta(DittaGUI gui) throws RemoteException {
-        basiAttive = new LinkedList<IBase>();
+        basiAttive = new HashMap<IBase, Boolean>();
         nomiBasi = new HashMap<String, IBase>();
         basiNomi = new HashMap<IBase, String>();
         
-        autotreniAttivi = new LinkedList<IAutotreno>();
+        autotreniAttivi = new HashMap<IAutotreno, Boolean>();
         nomiAutotreni = new HashMap<String, IAutotreno>();
         autotreniNomi = new HashMap<IAutotreno, String>();
         
@@ -84,24 +84,30 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                 //controllo che le basi esistano, altrimenti le cancello dall'elenco
                 synchronized(basiAttive) {
                     if(!terminato) {
-                        for(IBase base : basiAttive) {
-                            try {
-                                base.stato();
-                            } catch(RemoteException e) {
-                                System.out.println("La base " + basiNomi.get(base)
-                                        + " non è più attiva");
-                                aggiornaBasiAttive(base);
-                                //aggiorno le basi di partenza degli autotreni
-                                //in quanto potrebbero essere parcheggiati presso
-                                //la base che non è più attiva
-                                for(IAutotreno autotreno : autotreniAttivi) {
-                                    try {
-                                        autotreno.aggiornaBasePartenza();
-                                    } catch(RemoteException e1) {
-                                        System.out.println("Errore di comunicazione"
-                                                + "con l'autotreno "
-                                                + autotreniNomi.get(autotreno));
-                                        aggiornaAutotreniAttivi(autotreno);
+                        for(IBase base : basiAttive.keySet()) {
+                            //controllo solo le basi ancora attive
+                            if(basiAttive.get(base)) {
+                                try {
+                                    base.stato();
+                                } catch(RemoteException e) {
+                                    System.out.println("La base " + basiNomi.get(base)
+                                            + " non è più attiva");
+                                    aggiornaBasiAttive(base);
+                                    //aggiorno le basi di partenza degli autotreni
+                                    //in quanto potrebbero essere parcheggiati presso
+                                    //la base che non è più attiva
+                                    for(IAutotreno autotreno : autotreniAttivi.keySet()) {
+                                        //controllo solo gli autotreni ancora attivi
+                                        if(autotreniAttivi.get(autotreno)) {
+                                            try {
+                                                autotreno.aggiornaBasePartenza();
+                                            } catch(RemoteException e1) {
+                                                System.out.println("Errore di comunicazione"
+                                                        + "con l'autotreno "
+                                                        + autotreniNomi.get(autotreno));
+                                                aggiornaAutotreniAttivi(autotreno);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -126,22 +132,28 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                 //controllo che gli autotreni esistano, altrimenti li cancello dall'elenco
                 synchronized(autotreniAttivi) {
                     if(!terminato) {
-                        for(IAutotreno autotreno : autotreniAttivi) {
-                            try {
-                                autotreno.stato();
-                            } catch(RemoteException e) {
-                                System.out.println("L'autotreno " 
-                                        + autotreniNomi.get(autotreno)
-                                        + " non è più attivo");
-                                aggiornaAutotreniAttivi(autotreno);
-                                for(IBase base : basiAttive) {
-                                    try {
-                                        base.aggiornaListaAutotreni(autotreno);
-                                    } catch(RemoteException e1) {
-                                        System.out.println("Errore di comunicazione "
-                                                + "con la base "
-                                                + basiNomi.get(base));
-                                        aggiornaBasiAttive(base);
+                        for(IAutotreno autotreno : autotreniAttivi.keySet()) {
+                            //controllo solo gli autotreni ancora attivi
+                            if(autotreniAttivi.get(autotreno)) {
+                                try {
+                                    autotreno.stato();
+                                } catch(RemoteException e) {
+                                    System.out.println("L'autotreno " 
+                                            + autotreniNomi.get(autotreno)
+                                            + " non è più attivo");
+                                    aggiornaAutotreniAttivi(autotreno);
+                                    for(IBase base : basiAttive.keySet()) {
+                                        //controllo solo le basi ancora attive
+                                        if(basiAttive.get(base)) {
+                                            try {
+                                                base.aggiornaListaAutotreni(autotreno);
+                                            } catch(RemoteException e1) {
+                                                System.out.println("Errore di comunicazione "
+                                                        + "con la base "
+                                                        + basiNomi.get(base));
+                                                aggiornaBasiAttive(base);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -164,16 +176,20 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         //chiudo l'interfaccia utente
         gui.dispose();
         //termina tutte le basi
-        for(IBase base : basiAttive) {
-            try {
-                base.terminaAttivita();
-            } catch(RemoteException ignore) {}
+        for(IBase base : basiAttive.keySet()) {
+            if(basiAttive.get(base)) {
+                try {
+                    base.terminaAttivita();
+                } catch(RemoteException ignore) {}
+            }
         }
         //termina tutti gli autotreni
-        for(IAutotreno autotreno : autotreniAttivi) {
-            try {
-                autotreno.terminaAttivita();
-            } catch(RemoteException ignore) {}
+        for(IAutotreno autotreno : autotreniAttivi.keySet()) {
+            if(autotreniAttivi.get(autotreno)) {
+                try {
+                    autotreno.terminaAttivita();
+                } catch(RemoteException ignore) {}
+            }
         }
         //rimuove dal registro RMI la ditta di trasporti
         try {
@@ -197,7 +213,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         //prendo il lock sulla lista delle basi attive
         //aggiungo la nuova base
         synchronized(basiAttive) {
-            basiAttive.add(base);
+            basiAttive.put(base, true);
         }
         //prendo il lock sulla mappa dei nomi delle basi
         //aggiorno la mappa dei nomi delle basi
@@ -237,7 +253,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                 }
                 //prendo il lock sulla lista di autotreni attivi
                 synchronized(autotreniAttivi) {
-                    autotreniAttivi.add(autotreno);
+                    autotreniAttivi.put(autotreno, true);
                 }
                 partenza = nomiBasi.get(nomeBasePartenza);
             }
@@ -298,7 +314,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     //metodo che rimuove una base dalla lista delle basi attive
     private void rimuoviBase(IBase base) {
         synchronized(basiAttive) {
-            basiAttive.remove(base);
+            basiAttive.put(base, false);
         }
         gui.rimuoviBaseComboBox(basiNomi.get(base));
     }
@@ -314,15 +330,20 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     //metodo che rimuove un autotreno dalla lista degli autotreni attivi
     private void rimuoviAutotreno(IAutotreno autotreno) {
         synchronized(autotreniAttivi) {
-            autotreniAttivi.remove(autotreno);
+            autotreniAttivi.put(autotreno, false);
         }
     }
     
     //metodo chiamato da un autotreno quando la base in cui era parcheggiato cessa la propria attività
     @Override
     public IBase impostaNuovaBase(IAutotreno autotreno) throws RemoteException {
-        IBase base = basiAttive.getLast();
-        return base;
+        IBase nuovaBase = null;
+        for(IBase base : basiAttive.keySet()) {
+            if(basiAttive.get(base)) {
+                nuovaBase = base;
+            }
+        }
+        return nuovaBase;
     }
     
     //thread che gestisce l'invio degli ordini alle rispettive basi
