@@ -21,6 +21,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     private String nomeBase;
     
     private LinkedList<IOrdine> listaOrdini;
+    private LinkedList<IOrdine> storicoOrdini;
     private LinkedList<IAutotreno> listaAutotreni;
     private HashMap<String, Boolean> statoConsegne;
     
@@ -31,6 +32,7 @@ public class Base extends UnicastRemoteObject implements IBase {
 
     Base(String nomeBase, BaseGUI gui, IDitta ditta) throws RemoteException {
         listaOrdini = new LinkedList<IOrdine>();
+        storicoOrdini = new LinkedList<IOrdine>();
         listaAutotreni = new LinkedList<IAutotreno>();
         statoConsegne = new HashMap<String, Boolean>();
         
@@ -57,6 +59,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         //prendo il lock sulla lista degli ordini per aggiungere quello in arrivo
         synchronized(listaOrdini) {
             listaOrdini.add(ordine);
+            storicoOrdini.add(ordine);
             listaOrdini.notify();
         }
         //prendo il lock sullo stato delle consegne e inserisco il nome della base
@@ -101,6 +104,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la ditta di trasporti");
         }
+        aggiornaOrdiniGUI();
     }
 
     //metodo chiamato dall'autotreno che effettua l'ordine
@@ -200,7 +204,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     //metodo che aggiorna la lista degli ordini sulla GUI
     private void aggiornaOrdiniGUI() {
         String text = "";
-        for(IOrdine ordine : listaOrdini) {
+        for(IOrdine ordine : storicoOrdini) {
             try {
                 text += ordine.stampaNumeroDestinazione() + "\n";
             } catch(RemoteException e) {
@@ -220,18 +224,6 @@ public class Base extends UnicastRemoteObject implements IBase {
         public void run() {
             while(!terminato) {
                 try {
-                    //prendo il lock sulla lista degli autotreni parcheggiati
-                    synchronized(listaAutotreni) {
-                        //controllo che non sia stato riecevuto l'ordine di terminare
-                        //e che esistano autotreni parcheggiati da utilizzare
-                        while(!terminato && listaAutotreni.isEmpty()) {
-                            listaAutotreni.wait();
-                        }
-                        if(!terminato) {
-                            autotreno = listaAutotreni.poll();
-                        }
-                    }
-                    
                     //prendo il lock sulla lista delle basi di destinazione
                     synchronized(listaOrdini) {
                         //controllo che non sia stato riecevuto l'ordine di terminare
@@ -242,14 +234,31 @@ public class Base extends UnicastRemoteObject implements IBase {
                         if(!terminato) {
                             try {
                                 ordine = listaOrdini.poll();
-                                ordine.setAutotreno(autotreno);
                                 destinazione = ordine.getBaseDestinazione();
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con un ordine");
                             }
                         }
                     }
-                   
+                    
+                    //prendo il lock sulla lista degli autotreni parcheggiati
+                    synchronized(listaAutotreni) {
+                        //controllo che non sia stato riecevuto l'ordine di terminare
+                        //e che esistano autotreni parcheggiati da utilizzare
+                        while(!terminato && listaAutotreni.isEmpty()) {
+                            listaAutotreni.wait();
+                        }
+                        if(!terminato) {
+                            autotreno = listaAutotreni.poll();
+                            try {
+                                ordine.setAutotreno(autotreno);
+                            } catch(RemoteException e) {
+                                System.out.println("Errore di comunicazione con "
+                                        + "l'ordine da evadere");
+                            }
+                        }
+                    }
+                    
                     //prendo il lock sulla mappa degli ordini in evasione
                     synchronized(statoConsegne) {
                         //controllo che non sia stato riecevuto l'ordine di terminare,

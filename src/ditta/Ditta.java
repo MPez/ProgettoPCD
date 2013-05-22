@@ -79,13 +79,15 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     }
     
     private void aggiornaOrdiniGUI() {
+        String text = "";
         for(IOrdine ordine : storicoOrdini) {
             try {
-                gui.aggiornaOrdiniTextArea(ordine.stampaStato());
+                text += ordine.stampaStato();
             } catch(RemoteException e) {
                 System.out.println("Errore di comunicazione con un ordine");
             }
         }
+        gui.aggiornaOrdiniTextArea(text);
     }
     
     //thread che controlla ogni 10s che le basi siano attive
