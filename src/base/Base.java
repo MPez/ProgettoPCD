@@ -49,6 +49,11 @@ public class Base extends UnicastRemoteObject implements IBase {
     //metodo chiamato dalla ditta di trasporti per registrare un nuovo ordine
     @Override
     public void registraOrdine(IOrdine ordine) {
+        try {
+            ordine.setStato("non consegnato");
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con un ordine in arrivo");
+        }
         //prendo il lock sulla lista degli ordini per aggiungere quello in arrivo
         synchronized(listaOrdini) {
             listaOrdini.add(ordine);
@@ -87,7 +92,7 @@ public class Base extends UnicastRemoteObject implements IBase {
             statoConsegne.notify();
         }
         try {
-            ordine.setConsegnato(true);
+            ordine.setStato("consegnato");
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con un ordine");
         }
@@ -197,8 +202,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         String text = "";
         for(IOrdine ordine : listaOrdini) {
             try {
-                text += ((Integer)ordine.getNumeroOrdine()).toString() + ": "
-                        + ordine.getBaseDestinazione().getNomeBase() + "\n";
+                text += ordine.stampaNumeroDestinazione() + "\n";
             } catch(RemoteException e) {
                 System.out.println("Errore di comunicazione con un ordine");
             }
@@ -216,6 +220,18 @@ public class Base extends UnicastRemoteObject implements IBase {
         public void run() {
             while(!terminato) {
                 try {
+                    //prendo il lock sulla lista degli autotreni parcheggiati
+                    synchronized(listaAutotreni) {
+                        //controllo che non sia stato riecevuto l'ordine di terminare
+                        //e che esistano autotreni parcheggiati da utilizzare
+                        while(!terminato && listaAutotreni.isEmpty()) {
+                            listaAutotreni.wait();
+                        }
+                        if(!terminato) {
+                            autotreno = listaAutotreni.poll();
+                        }
+                    }
+                    
                     //prendo il lock sulla lista delle basi di destinazione
                     synchronized(listaOrdini) {
                         //controllo che non sia stato riecevuto l'ordine di terminare
@@ -226,29 +242,14 @@ public class Base extends UnicastRemoteObject implements IBase {
                         if(!terminato) {
                             try {
                                 ordine = listaOrdini.poll();
+                                ordine.setAutotreno(autotreno);
                                 destinazione = ordine.getBaseDestinazione();
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con un ordine");
                             }
                         }
                     }
-
-                    //prendo il lock sulla lista degli autotreni parcheggiati
-                    synchronized(listaAutotreni) {
-                        //controllo che non sia stato riecevuto l'ordine di terminare
-                        //e che esistano autotreni parcheggiati da utilizzare
-                        while(!terminato && listaAutotreni.isEmpty()) {
-                            listaAutotreni.wait();
-                        }
-                        if(!terminato) {
-                            try {
-                                autotreno = listaAutotreni.poll();
-                                ordine.setAutotreno(autotreno);
-                            } catch(RemoteException e) {
-                                System.out.println("Errore di connessione con un ordine");
-                            }
-                        }
-                    }
+                   
                     //prendo il lock sulla mappa degli ordini in evasione
                     synchronized(statoConsegne) {
                         //controllo che non sia stato riecevuto l'ordine di terminare,

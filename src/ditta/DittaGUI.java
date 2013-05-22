@@ -17,7 +17,8 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
      * Creates new form DittaGUI
      */
     public DittaGUI() {
-        initComponents();        
+        initComponents();
+        statoTextArea.setLineWrap(true);
     }
 
     public void setDitta(Ditta ditta) {
@@ -45,6 +46,9 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         statoScrollPane = new javax.swing.JScrollPane();
         statoTextArea = new javax.swing.JTextArea();
         terminaAttivitaButton = new javax.swing.JButton();
+        ordiniInseritiPanel = new javax.swing.JPanel();
+        ordiniInseritiScrollPane = new javax.swing.JScrollPane();
+        ordiniInseritiTextArea = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Sistema Trasporti Artici");
@@ -120,11 +124,11 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         statoPanel.setLayout(statoPanelLayout);
         statoPanelLayout.setHorizontalGroup(
             statoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statoScrollPane)
+            .addComponent(statoScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)
         );
         statoPanelLayout.setVerticalGroup(
             statoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statoScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
+            .addComponent(statoScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 217, Short.MAX_VALUE)
         );
 
         terminaAttivitaButton.setText("Termina Attività");
@@ -134,16 +138,35 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
             }
         });
 
+        ordiniInseritiPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Ordini Inseriti"));
+
+        ordiniInseritiTextArea.setColumns(20);
+        ordiniInseritiTextArea.setRows(5);
+        ordiniInseritiTextArea.setEnabled(false);
+        ordiniInseritiScrollPane.setViewportView(ordiniInseritiTextArea);
+
+        javax.swing.GroupLayout ordiniInseritiPanelLayout = new javax.swing.GroupLayout(ordiniInseritiPanel);
+        ordiniInseritiPanel.setLayout(ordiniInseritiPanelLayout);
+        ordiniInseritiPanelLayout.setHorizontalGroup(
+            ordiniInseritiPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(ordiniInseritiScrollPane)
+        );
+        ordiniInseritiPanelLayout.setVerticalGroup(
+            ordiniInseritiPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(ordiniInseritiScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(statoPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(inserimentoOrdiniPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(ordiniInseritiPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(statoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(inserimentoOrdiniPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(terminaAttivitaButton)))
                 .addContainerGap())
@@ -154,7 +177,9 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
                 .addContainerGap()
                 .addComponent(inserimentoOrdiniPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(statoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(ordiniInseritiPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(statoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(terminaAttivitaButton)
                 .addContainerGap())
@@ -201,6 +226,10 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     void aggiornaStatoTextArea(String text) {
         statoTextArea.append(text + "\n");
     }
+    
+    void aggiornaOrdiniTextArea(String text) {
+        ordiniInseritiTextArea.setText(text + "\n");
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -210,6 +239,9 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     private javax.swing.JLabel basePartenzaLabel;
     private javax.swing.JPanel inserimentoOrdiniPanel;
     private javax.swing.JButton inviaOrdineButton;
+    private javax.swing.JPanel ordiniInseritiPanel;
+    private javax.swing.JScrollPane ordiniInseritiScrollPane;
+    private javax.swing.JTextArea ordiniInseritiTextArea;
     private javax.swing.JLabel quantitaOrdiniLabel;
     private javax.swing.JSpinner quantitaOrdiniSpinner;
     private javax.swing.JPanel statoPanel;

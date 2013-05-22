@@ -15,20 +15,22 @@ import java.rmi.server.UnicastRemoteObject;
  * @author marco
  */
 public class Ordine extends UnicastRemoteObject implements IOrdine {
-    private IBase partenza;
-    private IBase destinazione;
+    private final IBase partenza;
+    private final IBase destinazione;
     private IAutotreno autotreno;
-    private boolean consegnato;
+    private String stato;
+    private final int numeroOrdine;
     
-    private static int numeroOrdine = 0;
+    private static int totaleOrdini = 0;
 
     public Ordine (IBase partenza, IBase destinazione) throws RemoteException {
         this.partenza = partenza;
         this.destinazione = destinazione;
-        this.autotreno = null;
-        this.consegnato = false;
         
-        numeroOrdine += 1;
+        autotreno = null;
+        stato = "ricevuto";
+        totaleOrdini +=1;
+        numeroOrdine = totaleOrdini;
     }
 
     @Override
@@ -57,12 +59,35 @@ public class Ordine extends UnicastRemoteObject implements IOrdine {
     }
     
     @Override
-    public boolean getConsegnato() {
-        return consegnato;
+    public String getStato() {
+        return stato;
     }
     
     @Override
-    public void setConsegnato(boolean consegnato) {
-        this.consegnato = consegnato;
+    public void setStato(String stato) {
+        this.stato = stato;
+    }
+
+    @Override
+    public String stampaStato() throws RemoteException {
+        String s;
+        s = "Ordine " + getNumeroOrdine() + " " + getStato();
+        return s;
+    }
+
+    @Override
+    public String stampaEsito() throws RemoteException {
+        String e;
+        e = "Ordine da " + getBasePartenza().getNomeBase() + " a " 
+                + getBaseDestinazione().getNomeBase() + " " + getStato()
+                + " da " + getAutotreno().getNomeAutotreno();
+        return e;
+    }
+
+    @Override
+    public String stampaNumeroDestinazione() throws RemoteException {
+        String s;
+        s = getNumeroOrdine() + ": per " + getBaseDestinazione().getNomeBase();
+        return s;
     }
 }

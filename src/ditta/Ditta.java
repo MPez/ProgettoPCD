@@ -29,7 +29,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     private HashMap<String, IAutotreno> nomiAutotreni;
     private HashMap<IAutotreno, String> autotreniNomi;
     
-    private LinkedList<Ordine> elencoOrdini;
+    private LinkedList<IOrdine> elencoOrdini;
+    private LinkedList<IOrdine> storicoOrdini;
     
     private DittaGUI gui;
     
@@ -46,7 +47,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         nomiAutotreni = new HashMap<String, IAutotreno>();
         autotreniNomi = new HashMap<IAutotreno, String>();
         
-        elencoOrdini = new LinkedList<Ordine>();
+        elencoOrdini = new LinkedList<IOrdine>();
+        storicoOrdini = new LinkedList<IOrdine>();
         
         this.gui = gui;
         terminato = false;
@@ -64,14 +66,25 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         synchronized(elencoOrdini) {
             try {
                 for(int i = 0; i < quantita; i++) {
-                    elencoOrdini.add(new Ordine(basePartenza, baseDestinazione));
-                    gui.aggiornaStatoTextArea("Ricevuto ordine da " + partenza 
-                            + " a " + destinazione);
+                    IOrdine ordine = new Ordine(basePartenza, baseDestinazione);
+                    elencoOrdini.add(ordine);
+                    storicoOrdini.add(ordine);
+                    aggiornaOrdiniGUI();
                 }
             } catch(RemoteException e) {
                 System.out.println("Errore durante la creazione di un nuovo ordine");
             }
             elencoOrdini.notify();
+        }
+    }
+    
+    private void aggiornaOrdiniGUI() {
+        for(IOrdine ordine : storicoOrdini) {
+            try {
+                gui.aggiornaOrdiniTextArea(ordine.stampaStato());
+            } catch(RemoteException e) {
+                System.out.println("Errore di comunicazione con un ordine");
+            }
         }
     }
     
@@ -235,11 +248,14 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                         + "di registrazione");
             }
         }
+        gui.aggiornaStatoTextArea("La base "+ basiNomi.get(base) 
+            + " si è registrata");
         //aggiorno i combo box della gui che contengono le basi
         gui.aggiungiBaseComboBox(basiNomi.get(base));
         //avvio il thread che controlla l'esistenza delle basi
         new Thread(this.new ControllaBasi()).start();
     }
+    
     //metodo chiamato da un autotreno in fase di registrazione
     @Override
     public IBase registraAutotreno(IAutotreno autotreno, String nomeBasePartenza) {
@@ -280,6 +296,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                         + "fase di registrazione");
             }
         }
+        gui.aggiornaStatoTextArea("L'autotreno " + autotreniNomi.get(autotreno)
+                + " si è registrato presso la base " + nomeBasePartenza);
         //avvio il thread che controlla l'esistenza degli autotreni
         new Thread(this.new ControllaAutotreni()).start();
         return partenza;
@@ -288,19 +306,12 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     //metodo chiamato da una base al momento della ricezione di un ordine
     @Override
     public void notificaEsito(IOrdine ordine) {
-        String text = "";
         try {
-            if(!ordine.getConsegnato()) {
-                text = "NON ";
-            }
-            gui.aggiornaStatoTextArea("Ordine proveniente da " 
-                    + basiNomi.get(ordine.getBasePartenza()) + " e diretto verso "
-                    + basiNomi.get(ordine.getBaseDestinazione()) + " " + text 
-                    + " è stato consegnato da "
-                    + autotreniNomi.get(ordine.getAutotreno()));
+            gui.aggiornaStatoTextArea(ordine.stampaEsito());
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con un ordine consegnato");
         }
+        aggiornaOrdiniGUI();
     }
 
     //metodo che aggiorna la lista delle basi attive
@@ -349,7 +360,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     //thread che gestisce l'invio degli ordini alle rispettive basi
     class InviaOrdini implements Runnable {
         private IBase partenza;
-        private Ordine ordine;
+        private IOrdine ordine;
         
         @Override
         public void run() {
@@ -361,7 +372,11 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                             elencoOrdini.wait();
                         }
                         ordine = elencoOrdini.poll();
-                        partenza = ordine.getBasePartenza();
+                        try {
+                            partenza = ordine.getBasePartenza();
+                        } catch(RemoteException e) {
+                            System.out.println("Errore di comunicazione con un ordine");
+                        }
                         try {
                             partenza.registraOrdine(ordine);
                         } catch(RemoteException e) {

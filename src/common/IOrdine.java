@@ -17,6 +17,9 @@ public interface IOrdine extends Remote {
     int getNumeroOrdine() throws RemoteException;
     IAutotreno getAutotreno() throws RemoteException;
     void setAutotreno(IAutotreno autotreno) throws RemoteException;
-    boolean getConsegnato() throws RemoteException;
-    void setConsegnato(boolean consegnato) throws RemoteException;
+    String getStato() throws RemoteException;
+    void setStato(String stato) throws RemoteException;
+    String stampaStato() throws RemoteException;
+    String stampaEsito() throws RemoteException;
+    String stampaNumeroDestinazione() throws RemoteException;
 }
