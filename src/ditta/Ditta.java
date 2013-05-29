@@ -90,8 +90,9 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         gui.aggiornaOrdiniTextArea(text);
     }
     
-    //thread che controlla ogni 10s che le basi siano attive
+    //thread che controlla ogni tempo secondi che le basi siano attive
     private class ControllaBasi implements Runnable {
+        private int tempo = 2000;
         @Override
         public void run() {
             while(!terminato) {
@@ -130,7 +131,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     }
                 }
                 try {
-                    Thread.currentThread().sleep(10000);
+                    Thread.currentThread().sleep(tempo);
                 } catch(InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -138,8 +139,9 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         }
     }
     
-    //thread che controlla ogni 10s che gli autotreni siano attivi
+    //thread che controlla ogni tempo secondi che gli autotreni siano attivi
     private class ControllaAutotreni implements Runnable{
+        private int tempo = 2000;
         @Override
         public void run() {
             while(!terminato) {
@@ -176,7 +178,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     }
                 }
                 try {
-                    Thread.currentThread().sleep(10000);
+                    Thread.currentThread().sleep(tempo);
                 } catch(InterruptedException e) {
                     e.printStackTrace();
                 }

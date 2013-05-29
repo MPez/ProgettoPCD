@@ -193,11 +193,13 @@ public class Base extends UnicastRemoteObject implements IBase {
     //metodo che aggiorna la lista degli autotreni sulla GUI
     private void aggiornaAutotreniGUI() {
         String text = "";
-        for(IAutotreno autotreno : listaAutotreni) {
-            try {
-                text += autotreno.getNomeAutotreno() + "\n";
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un autotreno parcheggiato");
+        synchronized(listaAutotreni) {
+            for(IAutotreno autotreno : listaAutotreni) {
+                try {
+                    text += autotreno.getNomeAutotreno() + "\n";
+                } catch(RemoteException e) {
+                    System.out.println("Errore di comunicazione con un autotreno parcheggiato");
+                }
             }
         }
         gui.setAutotreniTextArea(text);
@@ -206,11 +208,13 @@ public class Base extends UnicastRemoteObject implements IBase {
     //metodo che aggiorna la lista degli ordini sulla GUI
     private void aggiornaOrdiniGUI() {
         String text = "";
-        for(IOrdine ordine : storicoOrdini) {
-            try {
-                text += ordine.stampaNumeroDestinazione() + "\n";
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un ordine");
+        synchronized(storicoOrdini) {
+            for(IOrdine ordine : storicoOrdini) {
+                try {
+                    text += ordine.stampaNumeroDestinazione() + "\n";
+                } catch(RemoteException e) {
+                    System.out.println("Errore di comunicazione con un ordine");
+                }
             }
         }
         gui.setOrdiniTextArea(text);
