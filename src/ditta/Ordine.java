@@ -69,7 +69,7 @@ public class Ordine extends UnicastRemoteObject implements IOrdine {
     }
 
     @Override
-    public String stampaStato() throws RemoteException {
+    public String stampaStato() {
         String s;
         s = "Ordine " + getNumeroOrdine() + " " + getStato();
         return s;

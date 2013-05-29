@@ -82,7 +82,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         String text = "";
         for(IOrdine ordine : storicoOrdini) {
             try {
-                text += ordine.stampaStato();
+                text += ordine.stampaStato() + "\n";
             } catch(RemoteException e) {
                 System.out.println("Errore di comunicazione con un ordine");
             }

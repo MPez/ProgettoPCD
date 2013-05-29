@@ -55,29 +55,32 @@ public class Base extends UnicastRemoteObject implements IBase {
             ordine.setStato("non consegnato");
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con un ordine in arrivo");
+            avvisaDitta(ordine);
         }
         //prendo il lock sulla lista degli ordini per aggiungere quello in arrivo
         synchronized(listaOrdini) {
             listaOrdini.add(ordine);
-            storicoOrdini.add(ordine);
             listaOrdini.notify();
         }
+        //prendo il lock sullo storico degli ordini per aggiungere quello in arrivo
+        synchronized(storicoOrdini) {
+            storicoOrdini.add(ordine);
+        }
+        
         //prendo il lock sullo stato delle consegne e inserisco il nome della base
         //solo se non è presente nell'elenco
+        try {
         synchronized(statoConsegne) {
-            try {
-                if(!statoConsegne.containsKey(ordine.getBaseDestinazione().getNomeBase())) {
-                    statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
-                }
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con la base di destinazione");
+            if(!statoConsegne.containsKey(ordine.getBaseDestinazione().getNomeBase())) {
+                statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
             }
             statoConsegne.notify();
         }
-        try {
-            gui.aggiornaStatoTextArea("Ricevuto ordine per " + ordine.getBaseDestinazione().getNomeBase());
+        gui.aggiornaStatoTextArea("Ricevuto ordine per " 
+                + ordine.getBaseDestinazione().getNomeBase());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la base di destinazione");
+            System.out.println("Errore di comunicazione con un ordine in arrivo "
+                    + "o con la base di destinazione");
         }
         aggiornaOrdiniGUI();
     }
@@ -90,20 +93,17 @@ public class Base extends UnicastRemoteObject implements IBase {
             try {
                 statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
             } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un ordine");
+                System.out.println("Errore di comunicazione con un ordine consegnato "
+                        + "o con la base di destinazione");
             }
             statoConsegne.notify();
         }
         try {
             ordine.setStato("consegnato");
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un ordine");
+            System.out.println("Errore di comunicazione con un ordine consegnato");
         }
-        try {
-            ditta.notificaEsito(ordine);
-        } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la ditta di trasporti");
-        }
+        avvisaDitta(ordine);
         aggiornaOrdiniGUI();
     }
 
@@ -114,7 +114,9 @@ public class Base extends UnicastRemoteObject implements IBase {
             gui.aggiornaStatoTextArea("Ricevuto carico da " 
                     + ordine.getAutotreno().getNomeAutotreno());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con l'autotreno");
+            System.out.println("Errore di comunicazione con l'ordine in arrivo "
+                    + "o con l'autotreno");
+            avvisaDitta(ordine);
         }
         try {
             parcheggia(ordine.getAutotreno());
@@ -212,6 +214,16 @@ public class Base extends UnicastRemoteObject implements IBase {
             }
         }
         gui.setOrdiniTextArea(text);
+    }
+    
+    //metodo che notifica alla ditta la consegna o la perdita dell'ordine
+    private void avvisaDitta(IOrdine ordine) {
+        try {
+            ditta.notificaEsito(ordine);
+        } catch(RemoteException e1) {
+            System.out.println("Errore di comunicazione con la ditta di trasporti");
+            terminaAttivita();
+        }
     }
     
     //thread che gestisce la consegna degli ordini ricevuti

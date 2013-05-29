@@ -16,12 +16,12 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     /**
      * Creates new form DittaGUI
      */
-    public DittaGUI() {
+    DittaGUI() {
         initComponents();
         statoTextArea.setLineWrap(true);
     }
 
-    public void setDitta(Ditta ditta) {
+    void setDitta(Ditta ditta) {
         this.ditta = ditta;
     }
 
