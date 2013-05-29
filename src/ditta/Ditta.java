@@ -14,7 +14,10 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Random;
+import java.util.Set;
 
 /**
  *
@@ -35,6 +38,8 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     private DittaGUI gui;
     
     private boolean terminato;
+    private Boolean creaOrdiniAttivo;
+    private Object lock = new Object();
     
     private static final String HOST = "localhost:";
     
@@ -52,6 +57,27 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         
         this.gui = gui;
         terminato = false;
+        creaOrdiniAttivo = false;
+        
+        avviaCreaOrdini();
+    }
+    
+    //metodo che avvia il thread che genera ordini automaticamente
+    private void avviaCreaOrdini() {
+        new Thread(new creaOrdini()).start();
+    }
+    
+    //metodo chiamato dalla GUI che modifica il valore di creaOrdiniAttivo
+    void cambiaCreaOrdiniAttivo() {
+        synchronized(lock) {
+            if(creaOrdiniAttivo.booleanValue()) {
+                creaOrdiniAttivo = false;
+            }
+            else {
+                creaOrdiniAttivo = true;
+                lock.notify();
+            }
+        }
     }
     
     //metodo utilizzato per inserire nuovi ordini creati dalla GUI
@@ -78,6 +104,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         }
     }
     
+    //metodo che aggiorna la lista degli ordini nell'interfaccia grafica
     private void aggiornaOrdiniGUI() {
         String text = "";
         for(IOrdine ordine : storicoOrdini) {
@@ -90,9 +117,10 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         gui.aggiornaOrdiniTextArea(text);
     }
     
-    //thread che controlla ogni tempo secondi che le basi siano attive
+    //thread che controlla ogni tempo millisecondi che le basi siano attive
     private class ControllaBasi implements Runnable {
-        private int tempo = 2000;
+        private final int tempo = 2000;
+        
         @Override
         public void run() {
             while(!terminato) {
@@ -139,9 +167,10 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         }
     }
     
-    //thread che controlla ogni tempo secondi che gli autotreni siano attivi
+    //thread che controlla ogni tempo millisecondi che gli autotreni siano attivi
     private class ControllaAutotreni implements Runnable{
-        private int tempo = 2000;
+        private final int tempo = 2000;
+        
         @Override
         public void run() {
             while(!terminato) {
@@ -181,6 +210,68 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     Thread.currentThread().sleep(tempo);
                 } catch(InterruptedException e) {
                     e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    //thread gestito dalla pulsante Auto della GUI che, se attivo, crea ordini casuali ogni tempo millisecondi
+    class creaOrdini implements Runnable {
+        private IBase basePartenza;
+        private IBase baseDestinazione;
+        
+        private LinkedList<IBase> listaBasi;
+        
+        private final int tempo = 500;
+
+        public creaOrdini() {
+            super();
+            listaBasi = new LinkedList<IBase>();
+        }
+        
+        //metodo che aggiunge alla lista una base solo se è attiva
+        private void creaListaBasi() {
+            listaBasi.clear();
+            synchronized(basiAttive) {
+                for(IBase base : basiAttive.keySet()) {
+                    if(basiAttive.get(base)) {
+                        listaBasi.add(base);
+                    }
+                }
+            }
+        }
+        
+        @Override
+        public void run() {
+            while(!terminato) {
+                synchronized(lock) {
+                    try {
+                        while(!terminato && !creaOrdiniAttivo) {
+                            lock.wait();
+                        }
+                        Random random = new Random();
+                        creaListaBasi();
+                        //proseguo solo se ci sono basi attive
+                        //controllo che il thread sia attivo
+                        if(!terminato && creaOrdiniAttivo && !listaBasi.isEmpty()) {
+                            basePartenza = listaBasi.get(random.nextInt(listaBasi.size()));
+                            baseDestinazione = listaBasi.get(random.nextInt(listaBasi.size()));
+                            try {
+                                //controllo che il thread sia attivo
+                                //controllo che le basi siano diverse
+                                while(!terminato && creaOrdiniAttivo && basePartenza.getNomeBase().equals(baseDestinazione.getNomeBase())) {
+                                    baseDestinazione = listaBasi.get(random.nextInt(listaBasi.size()));
+                                }
+                                inserisciOrdine(basePartenza.getNomeBase(), baseDestinazione.getNomeBase(), random.nextInt(5));
+                            } catch(RemoteException e) {
+                                System.out.println("Errore di connessione con una base "
+                                        + "durante la creazione automatica degli ordini");
+                            }
+                            Thread.currentThread().sleep(tempo);
+                        }
+                    } catch(InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

@@ -4,6 +4,8 @@
  */
 package base;
 
+import javax.swing.text.DefaultCaret;
+
 /**
  *
  * @author marco
@@ -17,6 +19,14 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
     public BaseGUI(String nomeBase) {
         initComponents();
         this.setTitle(nomeBase);
+        
+        DefaultCaret caret;
+        //imposto l'autoscrolling di statoTextArea
+        caret = (DefaultCaret) statoTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        //imposto l'autoscrolling di ordiniTextArea
+        caret = (DefaultCaret) ordiniTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
     }
     
     void setBase(Base base) {

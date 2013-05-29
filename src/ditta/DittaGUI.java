@@ -5,6 +5,7 @@
 package ditta;
 
 import javax.swing.JOptionPane;
+import javax.swing.text.DefaultCaret;
 
 /**
  *
@@ -19,6 +20,15 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     DittaGUI() {
         initComponents();
         statoTextArea.setLineWrap(true);
+        
+        DefaultCaret  caret;
+        //imposto l'autoscrolling di statoTextArea
+        caret = (DefaultCaret) statoTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        //imposto l'autoscrolling di ordiniInseritiTextArea
+        caret = (DefaultCaret) ordiniInseritiTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        
     }
 
     void setDitta(Ditta ditta) {
@@ -42,6 +52,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         quantitaOrdiniLabel = new javax.swing.JLabel();
         quantitaOrdiniSpinner = new javax.swing.JSpinner();
         inviaOrdineButton = new javax.swing.JButton();
+        autoToggleButton = new javax.swing.JToggleButton();
         statoPanel = new javax.swing.JPanel();
         statoScrollPane = new javax.swing.JScrollPane();
         statoTextArea = new javax.swing.JTextArea();
@@ -71,6 +82,13 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
             }
         });
 
+        autoToggleButton.setText("Auto");
+        autoToggleButton.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                autoToggleButtonStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout inserimentoOrdiniPanelLayout = new javax.swing.GroupLayout(inserimentoOrdiniPanel);
         inserimentoOrdiniPanel.setLayout(inserimentoOrdiniPanelLayout);
         inserimentoOrdiniPanelLayout.setHorizontalGroup(
@@ -79,7 +97,8 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
                 .addContainerGap()
                 .addGroup(inserimentoOrdiniPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(inserimentoOrdiniPanelLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(autoToggleButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(inviaOrdineButton))
                     .addGroup(inserimentoOrdiniPanelLayout.createSequentialGroup()
                         .addGroup(inserimentoOrdiniPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -109,7 +128,9 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
                     .addComponent(quantitaOrdiniLabel)
                     .addComponent(quantitaOrdiniSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(inviaOrdineButton)
+                .addGroup(inserimentoOrdiniPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(inviaOrdineButton)
+                    .addComponent(autoToggleButton))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
 
@@ -207,6 +228,10 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         ditta.terminaAttivita();
     }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
+    private void autoToggleButtonStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_autoToggleButtonStateChanged
+        ditta.cambiaCreaOrdiniAttivo();
+    }//GEN-LAST:event_autoToggleButtonStateChanged
+
 
     @Override
     public void run() {
@@ -233,6 +258,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JToggleButton autoToggleButton;
     private javax.swing.JComboBox baseDestinazioneComboBox;
     private javax.swing.JLabel baseDestinazioneLabel;
     private javax.swing.JComboBox basePartenzaComboBox;
