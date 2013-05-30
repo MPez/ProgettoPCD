@@ -13,6 +13,9 @@ import javax.swing.text.DefaultCaret;
  */
 public class DittaGUI extends javax.swing.JFrame implements Runnable {
     Ditta ditta;
+    
+    private Thread creaOrdini;
+    private boolean creaOrdiniAttivo;
 
     /**
      * Creates new form DittaGUI
@@ -20,6 +23,8 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
     DittaGUI() {
         initComponents();
         statoTextArea.setLineWrap(true);
+        
+        creaOrdiniAttivo = false;
         
         DefaultCaret  caret;
         //imposto l'autoscrolling di statoTextArea
@@ -52,7 +57,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         quantitaOrdiniLabel = new javax.swing.JLabel();
         quantitaOrdiniSpinner = new javax.swing.JSpinner();
         inviaOrdineButton = new javax.swing.JButton();
-        autoToggleButton = new javax.swing.JToggleButton();
+        creaOrdiniButton = new javax.swing.JButton();
         statoPanel = new javax.swing.JPanel();
         statoScrollPane = new javax.swing.JScrollPane();
         statoTextArea = new javax.swing.JTextArea();
@@ -82,10 +87,10 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
             }
         });
 
-        autoToggleButton.setText("Auto");
-        autoToggleButton.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                autoToggleButtonStateChanged(evt);
+        creaOrdiniButton.setText("Auto");
+        creaOrdiniButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                creaOrdiniButtonActionPerformed(evt);
             }
         });
 
@@ -97,7 +102,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
                 .addContainerGap()
                 .addGroup(inserimentoOrdiniPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(inserimentoOrdiniPanelLayout.createSequentialGroup()
-                        .addComponent(autoToggleButton)
+                        .addComponent(creaOrdiniButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(inviaOrdineButton))
                     .addGroup(inserimentoOrdiniPanelLayout.createSequentialGroup()
@@ -130,7 +135,7 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
                 .addGap(18, 18, 18)
                 .addGroup(inserimentoOrdiniPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(inviaOrdineButton)
-                    .addComponent(autoToggleButton))
+                    .addComponent(creaOrdiniButton))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
 
@@ -228,10 +233,20 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         ditta.terminaAttivita();
     }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
-    private void autoToggleButtonStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_autoToggleButtonStateChanged
-        ditta.cambiaCreaOrdiniAttivo();
-    }//GEN-LAST:event_autoToggleButtonStateChanged
-
+    //metodo che crea e avvia un thread che crea ordini automaticamente
+    private void creaOrdiniButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_creaOrdiniButtonActionPerformed
+        if(!creaOrdiniAttivo) {
+            creaOrdini = ditta.avviaCreaOrdini();
+            creaOrdini.start();
+            creaOrdiniButton.setText("Stop");
+            creaOrdiniAttivo = true;
+        }
+        else {
+            creaOrdini.interrupt();
+            creaOrdiniButton.setText("Auto");
+            creaOrdiniAttivo = false;
+        }
+    }//GEN-LAST:event_creaOrdiniButtonActionPerformed
 
     @Override
     public void run() {
@@ -258,11 +273,11 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JToggleButton autoToggleButton;
     private javax.swing.JComboBox baseDestinazioneComboBox;
     private javax.swing.JLabel baseDestinazioneLabel;
     private javax.swing.JComboBox basePartenzaComboBox;
     private javax.swing.JLabel basePartenzaLabel;
+    private javax.swing.JButton creaOrdiniButton;
     private javax.swing.JPanel inserimentoOrdiniPanel;
     private javax.swing.JButton inviaOrdineButton;
     private javax.swing.JPanel ordiniInseritiPanel;
