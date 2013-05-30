@@ -1,6 +1,6 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Pezzutti Marco 1008804
+ * progetto per l'insegnamento di Programmazione Concorrente e Distribuita
  */
 package base;
 
@@ -37,14 +37,17 @@ public class BaseStarter {
         this.avviaBase();
     }
     
+    //metodo che avvia la base
     private void avviaBase() {
         new Thread(base.new ConsegnaOrdine()).start();
     }
     
+    //metodo che avvia la GUI
     private void avviaGUI() {
         new Thread(gui).start();
     }
     
+    //metodo che registra la base presso la ditta di trasporti
     private void registra() {
         try {
             ditta.registraBase(base);

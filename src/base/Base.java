@@ -1,6 +1,6 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Pezzutti Marco 1008804
+ * progetto per l'insegnamento di Programmazione Concorrente e Distribuita
  */
 package base;
 

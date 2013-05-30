@@ -1,6 +1,6 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Pezzutti Marco 1008804
+ * progetto per l'insegnamento di Programmazione Concorrente e Distribuita
  */
 package base;
 
@@ -16,7 +16,7 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
     /**
      * Creates new form baseGUI
      */
-    public BaseGUI(String nomeBase) {
+    BaseGUI(String nomeBase) {
         initComponents();
         this.setTitle(nomeBase);
         
