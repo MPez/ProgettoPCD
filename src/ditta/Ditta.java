@@ -14,10 +14,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Random;
-import java.util.Set;
 
 /**
  *
@@ -406,6 +404,18 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     //metodo che aggiorna la lista degli autotreni attivi
     @Override
     public void aggiornaAutotreniAttivi(IAutotreno autotreno) {
+        for(IOrdine ordine : storicoOrdini) {
+            try {
+                if("in transito".equals(ordine.getStato())) {
+                    if(autotreniNomi.get(ordine.getAutotreno()).equals(autotreniNomi.get(autotreno))) {
+                        ordine.setStato("abortito");
+                        ordine.getBasePartenza().notificaOrdine(ordine);
+                    }
+                }
+            } catch(RemoteException e) {
+                System.out.println("Errore di connessione con un ordine");
+            }
+        }
         rimuoviAutotreno(autotreno);
         gui.aggiornaStatoTextArea("L'autotreno " + autotreniNomi.get(autotreno)
                 + " non è più attivo");

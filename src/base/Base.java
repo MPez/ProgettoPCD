@@ -120,6 +120,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         }
         try {
             parcheggia(ordine.getAutotreno());
+            avvisaDitta(ordine);
             ordine.getBasePartenza().ordineConsegnato(ordine);
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con la base di partenza");
@@ -139,6 +140,19 @@ public class Base extends UnicastRemoteObject implements IBase {
             listaAutotreni.remove(autotreno);
         }
         aggiornaAutotreniGUI();
+    }
+    
+    @Override
+    public void notificaOrdine(IOrdine ordine) throws RemoteException {
+        try {
+            synchronized(statoConsegne) {
+                statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
+                statoConsegne.notify();
+            }
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con un ordine o con "
+                    + "una base di destinazione");
+        }
     }
     
     //metodo chiamato dalla ditta per testare l'attività di una base
@@ -288,6 +302,7 @@ public class Base extends UnicastRemoteObject implements IBase {
                             }
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con la base di destinazione");
+                            avvisaDitta(ordine);
                         }
                     }
                     if(!terminato) {
@@ -302,6 +317,7 @@ public class Base extends UnicastRemoteObject implements IBase {
                         } catch(RemoteException e) {
                             System.out.println("Errore di comunicazione con una base "
                                     + "o un autotreno");
+                            avvisaDitta(ordine);
                         }
                     }
                 } catch(InterruptedException e) {

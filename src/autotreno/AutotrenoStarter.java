@@ -44,7 +44,7 @@ public class AutotrenoStarter {
     
     //metodo che avvia 
     private void avviaAutotreno() {
-        new Thread(autotreno.new ConsegnaOrdine()).start();
+        new Thread(autotreno.new RecapitaOrdine()).start();
     }
     
     //metodo che si connette alla ditta per la registrazione dell'autotreno e

@@ -32,7 +32,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private IDitta ditta;
     
     private boolean terminato;
-    private boolean viaggioEseguito;
+    private Boolean viaggioEseguito;
     
     Autotreno(String nomeAutotreno, AutotrenoGUI gui, IDitta ditta) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
@@ -83,6 +83,12 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     //inserisce un nuovo ordine nella lista degli ordini
     @Override
     public void registraOrdine(IOrdine ordine) {
+        try {
+            ordine.setStato("in transito");
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con un ordine");
+            avvisaDitta(ordine);
+        }
         synchronized(listaOrdini) {
             listaOrdini.add(ordine);
             listaOrdini.notify();
@@ -101,27 +107,25 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     //richiede una nuova base dove parcheggiarsi
     @Override
     public void aggiornaBasePartenza() throws RemoteException {
+        IBase base = null;
         try {
-            if(basePartenza.stato()) {}
-        } catch(RemoteException e) {
-            IBase base = null;
+            base = ditta.impostaNuovaBase(this);
+        } catch(RemoteException e1) {
+            System.out.println("Errore di comunicazione con la ditta di trasporti");
+            terminaAttivita();
+        }
+        //controlla che sia disponibile almeno una base
+        //altrimenti termino l'attività
+        if(base != null) {
             try {
-                base = ditta.impostaNuovaBase(this);
-            } catch(RemoteException e1) {
-                System.out.println("Errore di comunicazione con la ditta di trasporti");
+                base.parcheggiaAutotreno(this);
+            } catch(RemoteException e2) {
+                System.out.println("Errore di comunicazione con la base di destinazione");
+                aggiornaBasePartenza();
             }
-            //controlla che sia disponibile almeno una base
-            //altrimenti termino l'attività
-            if(base != null) {
-                try {
-                    base.parcheggiaAutotreno(this);
-                } catch(RemoteException e2) {
-                    System.out.println("Errore di comunicazione con la base di destinazione");
-                }
-            }
-            else {
-                terminaAttivita();
-            }
+        }
+        else {
+            terminaAttivita();
         }
     }
     
@@ -134,7 +138,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     //metodo che termina l'attività dell'autotreno
     @Override
     public void terminaAttivita() {
-        terminato = true;
+        terminato = true;       
         synchronized(listaOrdini) {
             listaOrdini.notify();
         }
@@ -142,8 +146,17 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         System.exit(0);
     }
     
+    private void avvisaDitta(IOrdine ordine) {
+        try {
+            ditta.notificaEsito(ordine);
+        } catch(RemoteException e) {
+            System.out.println("Errore di comunicazione con la ditta di trasporti");
+            terminaAttivita();
+        }
+    }
+    
     //thread che gestisce la consegna degli ordini ricevuti
-    class ConsegnaOrdine implements Runnable {
+    class RecapitaOrdine implements Runnable {
         @Override
         public void run() {
             while(!terminato) {
@@ -167,6 +180,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con la base "
                                         + "di destinazione");
+                                avvisaDitta(ordine);
                             }
                         }
                     }
@@ -190,6 +204,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     class Viaggio extends SwingWorker<Void, Void> {
         @Override
         protected Void doInBackground() {
+            gui.setStatoTerminaAttivitaButton(false);
             Random random = new Random();
             int progress = 0;
             setProgress(0);
@@ -207,6 +222,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         public void done() {
             viaggioEseguito = true;
             setProgress(0);
+            gui.setStatoTerminaAttivitaButton(true);
         }
     }
 }

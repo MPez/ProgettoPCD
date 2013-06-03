@@ -152,6 +152,10 @@ public class AutotrenoGUI extends javax.swing.JFrame implements Runnable, Proper
         durataViaggioProgressBar.setMaximum(max);
     }
     
+    void setStatoTerminaAttivitaButton(boolean stato) {
+        terminaAttivitaButton.setEnabled(stato);
+    }
+    
     @Override
     public void run() {
         this.setVisible(true);
