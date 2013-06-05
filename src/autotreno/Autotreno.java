@@ -107,25 +107,30 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     //richiede una nuova base dove parcheggiarsi
     @Override
     public void aggiornaBasePartenza() throws RemoteException {
-        IBase base = null;
+        //se la base di partenza esite non faccio nulla
         try {
-            base = ditta.impostaNuovaBase(this);
-        } catch(RemoteException e1) {
-            System.out.println("Errore di comunicazione con la ditta di trasporti");
-            terminaAttivita();
-        }
-        //controlla che sia disponibile almeno una base
-        //altrimenti termino l'attività
-        if(base != null) {
+            if(basePartenza.stato()) {}
+        } catch(RemoteException e) {
+            IBase base = null;
             try {
-                base.parcheggiaAutotreno(this);
-            } catch(RemoteException e2) {
-                System.out.println("Errore di comunicazione con la base di destinazione");
-                aggiornaBasePartenza();
+                base = ditta.impostaNuovaBase(this);
+            } catch(RemoteException e1) {
+                System.out.println("Errore di comunicazione con la ditta di trasporti");
+                terminaAttivita();
             }
-        }
-        else {
-            terminaAttivita();
+            //controlla che sia disponibile almeno una base
+            //altrimenti termino l'attività
+            if(base != null) {
+                try {
+                    base.parcheggiaAutotreno(this);
+                } catch(RemoteException e2) {
+                    System.out.println("Errore di comunicazione con la base di destinazione");
+                    terminaAttivita();
+                }
+            }
+            else {
+                terminaAttivita();
+            }
         }
     }
     
@@ -171,16 +176,28 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                             ordine = listaOrdini.poll();
                             try {
                                 setBaseDestinazione(ordine.getBaseDestinazione());
-                                eseguiViaggio();
-                                while(!viaggioEseguito) {
-                                    Thread.currentThread().sleep(1000);
-                                }
+                            } catch(RemoteException e1) {
+                                System.out.println("Errore di comunicazione con un ordine");
+                            }
+                            
+                            eseguiViaggio();
+                            while(!viaggioEseguito) {
+                                Thread.currentThread().sleep(1000);
+                            }
+                            
+                            try {
                                 baseDestinazione.riceviMerce(ordine);
                                 viaggioEseguito = false;
                             } catch(RemoteException e) {
                                 System.out.println("Errore di comunicazione con la base "
                                         + "di destinazione");
-                                avvisaDitta(ordine);
+                                try {
+                                    ordine.setStato("abortito");
+                                    avvisaDitta(ordine);
+                                    basePartenza.parcheggiaAutotreno(ordine.getAutotreno());
+                                } catch(RemoteException e2) {
+                                    System.out.println("Errore di comunicazione con un ordine");
+                                }
                             }
                         }
                     }

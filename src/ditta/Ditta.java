@@ -204,6 +204,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         private LinkedList<IBase> listaBasi;
         
         private final int tempo = 1000;
+        private final int quantitaOrdini = 5;
 
         public CreaOrdini() {
             super();
@@ -233,17 +234,13 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     if(!terminato && !listaBasi.isEmpty()) {
                         basePartenza = listaBasi.get(random.nextInt(listaBasi.size()));
                         baseDestinazione = listaBasi.get(random.nextInt(listaBasi.size()));
-                        try {
-                            //controllo che il thread sia attivo
-                            //controllo che le basi siano diverse
-                            while(!terminato && basePartenza.getNomeBase().equals(baseDestinazione.getNomeBase())) {
-                                baseDestinazione = listaBasi.get(random.nextInt(listaBasi.size()));
-                            }
-                            inserisciOrdine(basePartenza.getNomeBase(), baseDestinazione.getNomeBase(), random.nextInt(5));
-                        } catch(RemoteException e) {
-                            System.out.println("Errore di connessione con una base "
-                                    + "durante la creazione automatica degli ordini");
+                        //controllo che il thread sia attivo
+                        //controllo che le basi siano diverse
+                        while(!terminato && basiNomi.get(basePartenza).equals(basiNomi.get(baseDestinazione))) {
+                            baseDestinazione = listaBasi.get(random.nextInt(listaBasi.size()));
                         }
+                        inserisciOrdine(basiNomi.get(basePartenza), basiNomi.get(baseDestinazione), random.nextInt(quantitaOrdini));
+
                         Thread.currentThread().sleep(tempo);
                     }
                 }
@@ -257,6 +254,10 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     //termina l'attività della ditta di trasporti
     void terminaAttivita() {
         terminato = true;
+        //risveglio gli eventuali thread dormienti
+        synchronized(elencoOrdini) {
+            elencoOrdini.notify();
+        }
         //chiudo l'interfaccia utente
         gui.dispose();
         //termina tutte le basi

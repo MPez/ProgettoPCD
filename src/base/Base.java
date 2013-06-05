@@ -116,6 +116,11 @@ public class Base extends UnicastRemoteObject implements IBase {
         } catch(RemoteException e) {
             System.out.println("Errore di comunicazione con l'ordine in arrivo "
                     + "o con l'autotreno");
+            try {
+                ordine.setStato("abortito");
+            } catch(RemoteException e1) {
+                System.out.println("Errore di comunicazione con l'ordine in arrivo");
+            }
             avvisaDitta(ordine);
         }
         try {
