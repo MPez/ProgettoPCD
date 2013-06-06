@@ -79,7 +79,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     aggiornaOrdiniGUI();
                 }
             } catch(RemoteException e) {
-                System.out.println("Errore durante la creazione di un nuovo ordine");
+                System.out.println("Dio: Errore durante la creazione di un nuovo ordine");
             }
             elencoOrdini.notify();
         }
@@ -92,7 +92,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
             try {
                 text += ordine.stampaStato() + "\n";
             } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un ordine");
+                System.out.println("Dao: Errore di comunicazione con un ordine");
             }
         }
         gui.aggiornaOrdiniTextArea(text);
@@ -115,7 +115,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                 try {
                                     base.stato();
                                 } catch(RemoteException e) {
-                                    System.out.println("La base " + basiNomi.get(base)
+                                    System.out.println("DCB: La base " + basiNomi.get(base)
                                             + " non è più attiva");
                                     aggiornaBasiAttive(base);
                                     //aggiorno le basi di partenza degli autotreni
@@ -127,7 +127,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                             try {
                                                 autotreno.aggiornaBasePartenza();
                                             } catch(RemoteException e1) {
-                                                System.out.println("Errore di comunicazione"
+                                                System.out.println("DCB: Errore di comunicazione"
                                                         + "con l'autotreno "
                                                         + autotreniNomi.get(autotreno));
                                                 aggiornaAutotreniAttivi(autotreno);
@@ -165,7 +165,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                 try {
                                     autotreno.stato();
                                 } catch(RemoteException e) {
-                                    System.out.println("L'autotreno " 
+                                    System.out.println("DCA: L'autotreno " 
                                             + autotreniNomi.get(autotreno)
                                             + " non è più attivo");
                                     aggiornaAutotreniAttivi(autotreno);
@@ -175,7 +175,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                             try {
                                                 base.aggiornaListaAutotreni(autotreno);
                                             } catch(RemoteException e1) {
-                                                System.out.println("Errore di comunicazione "
+                                                System.out.println("DCA: Errore di comunicazione "
                                                         + "con la base "
                                                         + basiNomi.get(base));
                                                 aggiornaBasiAttive(base);
@@ -281,7 +281,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
             String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
             Naming.unbind(rmiNomeDitta);
         } catch(RemoteException e) {
-            System.out.println("Errore nella cancellazione della registrazione "
+            System.out.println("Dta: Errore nella cancellazione della registrazione "
                     + "della ditta dal registro RMI");
         } catch(MalformedURLException e1) {
             e1.printStackTrace();
@@ -300,26 +300,24 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         synchronized(basiAttive) {
             basiAttive.put(base, true);
         }
-        //prendo il lock sulla mappa dei nomi delle basi
-        //aggiorno la mappa dei nomi delle basi
-        synchronized(nomiBasi) {
-            try {
-                nomiBasi.put(base.getNomeBase(), base);
-                nomiBasi.notifyAll();
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con una base in fase "
-                        + "di registrazione");
+        
+        try {
+            //prendo il lock sulla mappa dei nomi delle basi
+            //aggiorno la mappa dei nomi delle basi
+            synchronized(nomiBasi) {
+                    nomiBasi.put(base.getNomeBase(), base);
+                    nomiBasi.notifyAll();
             }
-        }
-        //aggiorno la mappa delle basi
-        synchronized(basiNomi) {
-            try {
-                basiNomi.put(base, base.getNomeBase());
-            } catch(RemoteException e) {
-                System.out.println("Errore di connessione con una base in fase "
-                        + "di registrazione");
+            
+            //aggiorno la mappa delle basi
+            synchronized(basiNomi) {
+                    basiNomi.put(base, base.getNomeBase());
             }
+        } catch(RemoteException e) {
+            System.out.println("Drb: Errore di connessione con una base in fase "
+                    + "di registrazione");
         }
+        
         gui.aggiornaStatoTextArea("La base "+ basiNomi.get(base) 
             + " si è registrata");
         //aggiorno i combo box della gui che contengono le basi
@@ -348,30 +346,30 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
-        //prendo il lock sulla mappa dei nomi degli autotreni
-        //aggiorno la mappa dei nomi delgi autotreni
-        synchronized(nomiAutotreni) {
-            try {
+        
+        try {
+            //prendo il lock sulla mappa dei nomi degli autotreni
+            //aggiorno la mappa dei nomi delgi autotreni
+            synchronized(nomiAutotreni) {
                 nomiAutotreni.put(autotreno.getNomeAutotreno(), autotreno);
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un autotreno in "
-                        + "fase di registrazione");
             }
-        }
-        //prendo il lock sulla mappa degli autotreni
-        //aggiorno la mappa degli autotreni
-        synchronized(autotreniNomi) {
-            try {
+
+            //prendo il lock sulla mappa degli autotreni
+            //aggiorno la mappa degli autotreni
+            synchronized(autotreniNomi) {
                 autotreniNomi.put(autotreno, autotreno.getNomeAutotreno());
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un autotreno in "
-                        + "fase di registrazione");
             }
+        } catch(RemoteException e) {
+            System.out.println("Dra: Errore di comunicazione con un autotreno in "
+                    + "fase di registrazione");
         }
+
         gui.aggiornaStatoTextArea("L'autotreno " + autotreniNomi.get(autotreno)
                 + " si è registrato presso la base " + nomeBasePartenza);
+        
         //avvio il thread che controlla l'esistenza degli autotreni
         new Thread(this.new ControllaAutotreni()).start();
+        
         return partenza;
     }
 
@@ -381,7 +379,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         try {
             gui.aggiornaStatoTextArea(ordine.stampaEsito());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un ordine consegnato");
+            System.out.println("Dne: Errore di comunicazione con un ordine consegnato");
         }
         aggiornaOrdiniGUI();
     }
@@ -414,7 +412,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     }
                 }
             } catch(RemoteException e) {
-                System.out.println("Errore di connessione con un ordine");
+                System.out.println("Daaa: Errore di connessione con un ordine");
             }
         }
         rimuoviAutotreno(autotreno);
@@ -463,12 +461,12 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                         try {
                             partenza = ordine.getBasePartenza();
                         } catch(RemoteException e) {
-                            System.out.println("Errore di comunicazione con un ordine");
+                            System.out.println("DIO: Errore di comunicazione con un ordine");
                         }
                         try {
                             partenza.registraOrdine(ordine);
                         } catch(RemoteException e) {
-                            System.out.println("Errore di comunicazione con la base "
+                            System.out.println("DIO: Errore di comunicazione con la base "
                                     + basiNomi.get(partenza));
                             aggiornaBasiAttive(partenza);
                         }
