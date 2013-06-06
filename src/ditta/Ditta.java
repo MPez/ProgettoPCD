@@ -455,7 +455,11 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                         while(!terminato && elencoOrdini.isEmpty()) {
                             elencoOrdini.wait();
                         }
-                        ordine = elencoOrdini.poll();
+                        if(!terminato) {
+                            ordine = elencoOrdini.poll();
+                        }
+                    }
+                    if(!terminato) {
                         try {
                             partenza = ordine.getBasePartenza();
                         } catch(RemoteException e) {

@@ -106,7 +106,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     //l'autotreno non è più attiva
     //richiede una nuova base dove parcheggiarsi
     @Override
-    public void aggiornaBasePartenza() throws RemoteException {
+    public void aggiornaBasePartenza() {
         //se la base di partenza esite non faccio nulla
         try {
             if(basePartenza.stato()) {}
@@ -151,6 +151,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         System.exit(0);
     }
     
+    //metodo usato per notificare alla ditta lo stato dell'ordine
     private void avvisaDitta(IOrdine ordine) {
         try {
             ditta.notificaEsito(ordine);
@@ -193,10 +194,16 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                                         + "di destinazione");
                                 try {
                                     ordine.setStato("abortito");
-                                    avvisaDitta(ordine);
-                                    basePartenza.parcheggiaAutotreno(ordine.getAutotreno());
                                 } catch(RemoteException e2) {
                                     System.out.println("Errore di comunicazione con un ordine");
+                                }
+                                try {
+                                    avvisaDitta(ordine);
+                                    basePartenza.notificaOrdine(ordine);
+                                    basePartenza.parcheggiaAutotreno(ordine.getAutotreno());
+                                } catch(RemoteException e2) {
+                                    System.out.println("Errore di comunicazione con la base di partenza");
+                                    aggiornaBasePartenza();
                                 }
                             }
                         }

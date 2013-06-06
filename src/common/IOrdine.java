@@ -12,9 +12,10 @@ import java.rmi.RemoteException;
  * @author marco
  */
 public interface IOrdine extends Remote {
+    String getNomePartenza() throws RemoteException;
+    String getNomeDestinazione() throws RemoteException;
     IBase getBasePartenza() throws RemoteException;
     IBase getBaseDestinazione() throws RemoteException;
-    int getNumeroOrdine() throws RemoteException;
     IAutotreno getAutotreno() throws RemoteException;
     void setAutotreno(IAutotreno autotreno) throws RemoteException;
     String getStato() throws RemoteException;

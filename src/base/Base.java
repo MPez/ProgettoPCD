@@ -54,7 +54,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         try {
             ordine.setStato("non consegnato");
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un ordine in arrivo");
+            System.out.println("Bro: Errore di comunicazione con un ordine in arrivo");
             avvisaDitta(ordine);
         }
         //prendo il lock sulla lista degli ordini per aggiungere quello in arrivo
@@ -79,7 +79,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         gui.aggiornaStatoTextArea("Ricevuto ordine per " 
                 + ordine.getBaseDestinazione().getNomeBase());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un ordine in arrivo "
+            System.out.println("Bro: Errore di comunicazione con un ordine in arrivo "
                     + "o con la base di destinazione");
         }
         aggiornaOrdiniGUI();
@@ -93,7 +93,7 @@ public class Base extends UnicastRemoteObject implements IBase {
             try {
                 statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
             } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con un ordine consegnato "
+                System.out.println("Boc: Errore di comunicazione con un ordine consegnato "
                         + "o con la base di destinazione");
             }
             statoConsegne.notify();
@@ -101,7 +101,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         try {
             ordine.setStato("consegnato");
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un ordine consegnato");
+            System.out.println("Boc: Errore di comunicazione con un ordine consegnato");
         }
         avvisaDitta(ordine);
         aggiornaOrdiniGUI();
@@ -114,12 +114,12 @@ public class Base extends UnicastRemoteObject implements IBase {
             gui.aggiornaStatoTextArea("Ricevuto carico da " 
                     + ordine.getAutotreno().getNomeAutotreno());
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con l'ordine in arrivo "
+            System.out.println("Brm: Errore di comunicazione con l'ordine in arrivo "
                     + "o con l'autotreno");
             try {
                 ordine.setStato("abortito");
             } catch(RemoteException e1) {
-                System.out.println("Errore di comunicazione con l'ordine in arrivo");
+                System.out.println("Brm: Errore di comunicazione con l'ordine in arrivo");
             }
             avvisaDitta(ordine);
         }
@@ -128,7 +128,7 @@ public class Base extends UnicastRemoteObject implements IBase {
             avvisaDitta(ordine);
             ordine.getBasePartenza().ordineConsegnato(ordine);
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con la base di partenza");
+            System.out.println("Brm: Errore di comunicazione con la base di partenza");
         }
     }
 
@@ -147,16 +147,16 @@ public class Base extends UnicastRemoteObject implements IBase {
         aggiornaAutotreniGUI();
     }
     
+    //metodo chiamato per notificare la non consegna dell'ordine
     @Override
     public void notificaOrdine(IOrdine ordine) throws RemoteException {
         try {
             synchronized(statoConsegne) {
-                statoConsegne.put(ordine.getBaseDestinazione().getNomeBase(), false);
+                statoConsegne.put(ordine.getNomeDestinazione(), false);
                 statoConsegne.notify();
             }
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con un ordine o con "
-                    + "una base di destinazione");
+            System.out.println("Bno: Errore di comunicazione con un ordine");
         }
     }
     
@@ -191,20 +191,17 @@ public class Base extends UnicastRemoteObject implements IBase {
     
     //metodo che parcheggia l'autotreno in arrivo e lo aggiunge alla lista
     private void parcheggia(IAutotreno autotreno) {
-        synchronized(listaAutotreni) {
-            listaAutotreni.add(autotreno);
-            listaAutotreni.notify();
-            try {
-                autotreno.parcheggiaAutotreno(this);
-            } catch(RemoteException e) {
-                System.out.println("Errore di comunicazione con l'autotreno per il parcheggio");
-            }
-        }
         try {
+            synchronized(listaAutotreni) {
+                listaAutotreni.add(autotreno);
+                listaAutotreni.notify();
+                autotreno.parcheggiaAutotreno(this);
+            }
             gui.aggiornaStatoTextArea("Autotreno " + autotreno.getNomeAutotreno() 
                     + " parcheggiato");
         } catch(RemoteException e) {
-            System.out.println("Errore di comunicazione con l'autotreno");
+            System.out.println("Bp: Errore di comunicazione con l'autotreno "
+                    + "per il parcheggio");
         }  
         aggiornaAutotreniGUI();
     }
@@ -217,7 +214,7 @@ public class Base extends UnicastRemoteObject implements IBase {
                 try {
                     text += autotreno.getNomeAutotreno() + "\n";
                 } catch(RemoteException e) {
-                    System.out.println("Errore di comunicazione con un autotreno parcheggiato");
+                    System.out.println("Baa: Errore di comunicazione con un autotreno parcheggiato");
                 }
             }
         }
@@ -232,7 +229,7 @@ public class Base extends UnicastRemoteObject implements IBase {
                 try {
                     text += ordine.stampaNumeroDestinazione() + "\n";
                 } catch(RemoteException e) {
-                    System.out.println("Errore di comunicazione con un ordine");
+                    System.out.println("Bao: Errore di comunicazione con un ordine");
                 }
             }
         }
@@ -244,7 +241,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         try {
             ditta.notificaEsito(ordine);
         } catch(RemoteException e1) {
-            System.out.println("Errore di comunicazione con la ditta di trasporti");
+            System.out.println("Bad: Errore di comunicazione con la ditta di trasporti");
             terminaAttivita();
         }
     }
@@ -253,65 +250,62 @@ public class Base extends UnicastRemoteObject implements IBase {
     class ConsegnaOrdine implements Runnable {
         private IOrdine ordine;
         private IBase destinazione;
-        private IAutotreno autotreno;
+        private IAutotreno autotreno = null;
         
         @Override
         public void run() {
             while(!terminato) {
                 try {
-                    //prendo il lock sulla lista delle basi di destinazione
-                    synchronized(listaOrdini) {
-                        //controllo che non sia stato riecevuto l'ordine di terminare
-                        //e che la lista di ordini non sia vuota
-                        while(!terminato && listaOrdini.isEmpty()) {
-                            listaOrdini.wait();
-                        }
-                        if(!terminato) {
-                            try {
+                    try {
+                        //prendo il lock sulla lista delle basi di destinazione
+                        synchronized(listaOrdini) {
+                            //controllo che non sia stato riecevuto l'ordine di terminare
+                            //e che la lista di ordini non sia vuota
+                            while(!terminato && listaOrdini.isEmpty()) {
+                                listaOrdini.wait();
+                            }
+                            if(!terminato) {
                                 ordine = listaOrdini.poll();
                                 destinazione = ordine.getBaseDestinazione();
-                            } catch(RemoteException e) {
-                                System.out.println("Errore di comunicazione con un ordine");
                             }
                         }
-                    }
-                    
-                    //prendo il lock sulla lista degli autotreni parcheggiati
-                    synchronized(listaAutotreni) {
-                        //controllo che non sia stato riecevuto l'ordine di terminare
-                        //e che esistano autotreni parcheggiati da utilizzare
-                        while(!terminato && listaAutotreni.isEmpty()) {
-                            listaAutotreni.wait();
-                        }
-                        if(!terminato) {
-                            autotreno = listaAutotreni.poll();
-                            try {
+
+                        //prendo il lock sulla lista degli autotreni parcheggiati
+                        synchronized(listaAutotreni) {
+                            //controllo che non sia stato riecevuto l'ordine di terminare
+                            //e che esistano autotreni parcheggiati da utilizzare
+                            while(!terminato && listaAutotreni.isEmpty()) {
+                                listaAutotreni.wait();
+                            }
+                            if(!terminato) {
+                                autotreno = listaAutotreni.poll();
                                 ordine.setAutotreno(autotreno);
-                            } catch(RemoteException e) {
-                                System.out.println("Errore di comunicazione con "
-                                        + "l'ordine da evadere");
                             }
+                        }
+                        
+                    } catch(RemoteException e) {
+                        System.out.println("Bco: Errore di comunicazione con l'ordine da evadere");
+                        avvisaDitta(ordine);
+                        aggiornaOrdiniGUI();
+                        if(autotreno != null) {
+                            parcheggia(autotreno);
                         }
                     }
                     
-                    //prendo il lock sulla mappa degli ordini in evasione
-                    synchronized(statoConsegne) {
-                        //controllo che non sia stato riecevuto l'ordine di terminare,
-                        //controllo che non sia in corso un ordine verso la stessa destinazione
-                        try {
+                    try {
+                        //prendo il lock sulla mappa degli ordini in evasione
+                        synchronized(statoConsegne) {
+                            //controllo che non sia stato riecevuto l'ordine di terminare,
+                            //controllo che non sia in corso un ordine verso la stessa destinazione
                             while(!terminato && statoConsegne.get(destinazione.getNomeBase())) {
                                 statoConsegne.wait();
                             }
                             if(!terminato) {
                                 statoConsegne.put(destinazione.getNomeBase(), true);
                             }
-                        } catch(RemoteException e) {
-                            System.out.println("Errore di comunicazione con la base di destinazione");
-                            avvisaDitta(ordine);
                         }
-                    }
-                    if(!terminato) {
-                        try {
+                        
+                        if(!terminato) {
                             gui.aggiornaStatoTextArea("Autotreno " 
                                     + autotreno.getNomeAutotreno() 
                                     + " in partenza per " 
@@ -319,11 +313,13 @@ public class Base extends UnicastRemoteObject implements IBase {
                             aggiornaOrdiniGUI();
                             aggiornaAutotreniGUI();
                             autotreno.registraOrdine(ordine);
-                        } catch(RemoteException e) {
-                            System.out.println("Errore di comunicazione con una base "
-                                    + "o un autotreno");
-                            avvisaDitta(ordine);
                         }
+                    } catch(RemoteException e) {
+                        System.out.println("Bco: Errore di comunicazione con la base "
+                                + "di destinazione o con l'autotreno");
+                        avvisaDitta(ordine);
+                        aggiornaOrdiniGUI();
+                        parcheggia(autotreno);
                     }
                 } catch(InterruptedException e) {
                     e.printStackTrace();
