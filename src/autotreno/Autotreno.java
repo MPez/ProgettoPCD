@@ -32,7 +32,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private IDitta ditta;
     
     private boolean terminato;
-    private Boolean viaggioEseguito;
+    private boolean viaggioEseguito;
     
     Autotreno(String nomeAutotreno, AutotrenoGUI gui, IDitta ditta) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
@@ -108,6 +108,8 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     @Override
     public void aggiornaBasePartenza() {
         //se la base di partenza esite non faccio nulla
+        //altrimenti richiedo una nuova base alla ditta
+        //se la ditta non esiste più termino l'attività
         try {
             if(basePartenza.stato()) {}
         } catch(RemoteException e) {
@@ -175,36 +177,52 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
                             listaOrdini.wait(); 
                         }
                         if(!terminato) {
+                            //recupero l'ordine da evadere e imposto la destinazione
                             ordine = listaOrdini.poll();
                             try {
                                 setBaseDestinazione(ordine.getBaseDestinazione());
                             } catch(RemoteException e1) {
                                 System.out.println("ARO: Errore di comunicazione con un ordine");
                             }
-                            
+                            //eseguo il viaggio e fino a quando non è finito aspetto
                             eseguiViaggio();
                             while(!viaggioEseguito) {
                                 Thread.currentThread().sleep(1000);
                             }
-                            
-                            try {
-                                baseDestinazione.riceviMerce(ordine);
-                                viaggioEseguito = false;
-                            } catch(RemoteException e) {
-                                System.out.println("ARO: Errore di comunicazione con la base "
-                                        + "di destinazione");
+                            //terminato il viaggio faccio ricevere la merce alla base di destinazione
+                            //se la base non è più attiva, l'ordine viene abortito
+                            //vengono avvisate la ditta e la base di partenza
+                            //viene fatto tornare l'autotreno alla base di partenza
+                            //se non esiste più l'autotreno richiede una nuova base dove parcheggiarsi
+                            if(!terminato) {
                                 try {
-                                    ordine.setStato("abortito");
-                                } catch(RemoteException e2) {
-                                    System.out.println("ARO: Errore di comunicazione con un ordine");
-                                }
-                                try {
-                                    avvisaDitta(ordine);
-                                    basePartenza.notificaOrdine(ordine);
-                                    basePartenza.parcheggiaAutotreno(ordine.getAutotreno());
-                                } catch(RemoteException e2) {
-                                    System.out.println("ARO: Errore di comunicazione con la base di partenza");
-                                    aggiornaBasePartenza();
+                                    viaggioEseguito = false;
+                                    baseDestinazione.riceviMerce(ordine);
+                                //in caso di errore con la base abortisco l'ordine e avviso la ditta
+                                //cerco di avvisare la base di partenza
+                                //provo a far tornare verso la base di aprtenza l'autotreno
+                                //altrimenti ne richedo una nuova alla ditta
+                                } catch(RemoteException e) {
+                                    System.out.println("ARO: Errore di comunicazione con la base "
+                                            + "di destinazione");
+                                    try {
+                                        ordine.setStato("abortito");
+                                    } catch(RemoteException e2) {
+                                        System.out.println("ARO: Errore di comunicazione con un ordine");
+                                    }
+                                    try {
+                                        avvisaDitta(ordine);
+                                        basePartenza.notificaOrdine(ordine);
+                                        basePartenza.parcheggiaAutotreno(ordine.getAutotreno());
+                                    } catch(RemoteException e2) {
+                                        System.out.println("ARO: Errore di comunicazione con la base di partenza");
+                                        try {
+                                            ordine.getAutotreno().aggiornaBasePartenza();
+                                        } catch(RemoteException e3) {
+                                            System.out.println("ARO: Errore di comunicazione con un ordine o "
+                                                    + "con l'autotreno");
+                                        }
+                                    }
                                 }
                             }
                         }

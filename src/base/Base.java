@@ -264,6 +264,7 @@ public class Base extends UnicastRemoteObject implements IBase {
                             while(!terminato && listaOrdini.isEmpty()) {
                                 listaOrdini.wait();
                             }
+                            //recupero l'ordine da evadere e imposto la base di destinazione
                             if(!terminato) {
                                 ordine = listaOrdini.poll();
                                 destinazione = ordine.getBaseDestinazione();
@@ -277,14 +278,15 @@ public class Base extends UnicastRemoteObject implements IBase {
                             while(!terminato && listaAutotreni.isEmpty()) {
                                 listaAutotreni.wait();
                             }
+                            //recupero l'autotreno pronto nel parcheggio e lo imposto nell'ordine
                             if(!terminato) {
                                 autotreno = listaAutotreni.poll();
                                 ordine.setAutotreno(autotreno);
                             }
                         }
-                        
+                    //in caso di errore con l'ordine, avviso la ditta e faccio parcheggiare l'autotreno
                     } catch(RemoteException e) {
-                        System.out.println("Bco: Errore di comunicazione con l'ordine da evadere");
+                        System.out.println("BCO: Errore di comunicazione con l'ordine da evadere");
                         avvisaDitta(ordine);
                         aggiornaOrdiniGUI();
                         if(autotreno != null) {
@@ -300,26 +302,39 @@ public class Base extends UnicastRemoteObject implements IBase {
                             while(!terminato && statoConsegne.get(destinazione.getNomeBase())) {
                                 statoConsegne.wait();
                             }
+                            //imposto verso quale destinazione sto per intraprendere un trasporto
                             if(!terminato) {
                                 statoConsegne.put(destinazione.getNomeBase(), true);
                             }
                         }
-                        
+                        //aggiorno gli stati e avviso l'autotreno del nuovo ordine da trasportare
                         if(!terminato) {
-                            gui.aggiornaStatoTextArea("Autotreno " 
-                                    + autotreno.getNomeAutotreno() 
-                                    + " in partenza per " 
-                                    + destinazione.getNomeBase());
+                            gui.aggiornaStatoTextArea("Autotreno " + autotreno.getNomeAutotreno() 
+                                    + " in partenza per " + destinazione.getNomeBase());
                             aggiornaOrdiniGUI();
                             aggiornaAutotreniGUI();
                             autotreno.registraOrdine(ordine);
                         }
+                    //in caso di errore cerco di abortire l'ordine e avviso la ditta
+                    //se l'errore è causato dalla base di destinazione faccio parcheggiare l'autotreno
                     } catch(RemoteException e) {
-                        System.out.println("Bco: Errore di comunicazione con la base "
+                        System.out.println("BCO: Errore di comunicazione con la base "
                                 + "di destinazione o con l'autotreno");
+                        try {
+                            ordine.setStato("abortito");
+                        } catch(RemoteException e1) {
+                            System.out.println("BCO: Errore di comunizazione con "
+                                    + "l'ordine in evasione");
+                        }
                         avvisaDitta(ordine);
                         aggiornaOrdiniGUI();
-                        parcheggia(autotreno);
+                        try {
+                            if(autotreno.stato()) {
+                                parcheggia(autotreno);
+                            }
+                        } catch(RemoteException e1) {
+                            System.out.println("BCO: Errore di comunicazione con l'autotreno");
+                        }
                     }
                 } catch(InterruptedException e) {
                     e.printStackTrace();
