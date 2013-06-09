@@ -158,6 +158,7 @@ public class Base extends UnicastRemoteObject implements IBase {
         } catch(RemoteException e) {
             System.out.println("Bno: Errore di comunicazione con un ordine");
         }
+        aggiornaOrdiniGUI();
     }
     
     //metodo chiamato dalla ditta per testare l'attività di una base

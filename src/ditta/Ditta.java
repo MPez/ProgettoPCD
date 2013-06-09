@@ -123,15 +123,17 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                                     //la base che non è più attiva
                                     for(IAutotreno autotreno : autotreniAttivi.keySet()) {
                                         //controllo solo gli autotreni ancora attivi
-                                        if(autotreniAttivi.get(autotreno)) {
-                                            try {
+                                        //e che non siano in viaggio
+                                        try {
+                                            if(autotreniAttivi.get(autotreno) 
+                                                    && !autotreno.getViaggioEseguito()) {
                                                 autotreno.aggiornaBasePartenza();
-                                            } catch(RemoteException e1) {
-                                                System.out.println("DCB: Errore di comunicazione"
-                                                        + "con l'autotreno "
-                                                        + autotreniNomi.get(autotreno));
-                                                aggiornaAutotreniAttivi(autotreno);
                                             }
+                                        } catch(RemoteException e1) {
+                                            System.out.println("DCB: Errore di comunicazione"
+                                                    + "con l'autotreno "
+                                                    + autotreniNomi.get(autotreno));
+                                            aggiornaAutotreniAttivi(autotreno);
                                         }
                                     }
                                 }

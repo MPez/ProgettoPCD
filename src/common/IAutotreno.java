@@ -15,6 +15,7 @@ public interface IAutotreno extends Remote {
     void registraOrdine(IOrdine ordine) throws RemoteException;
     void parcheggiaAutotreno(IBase destinazione) throws RemoteException;
     void aggiornaBasePartenza() throws RemoteException;
+    boolean getViaggioEseguito() throws RemoteException;
     boolean stato() throws RemoteException;
     void terminaAttivita() throws RemoteException;
 }

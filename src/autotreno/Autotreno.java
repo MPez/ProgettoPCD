@@ -137,6 +137,12 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         }
     }
     
+    //metodo chiamato dalla ditta per controllare se l'autotreno è in viaggio
+    @Override
+    public boolean getViaggioEseguito() {
+        return viaggioEseguito;
+    }
+    
     //metodo chiamato dalla ditta per testare l'attività di un autotreno
     @Override
     public boolean stato() {
