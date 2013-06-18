@@ -14,12 +14,12 @@ import java.rmi.server.UnicastRemoteObject;
  *
  * @author marco
  */
-public class Ordine extends UnicastRemoteObject implements IOrdine {
+class Ordine extends UnicastRemoteObject implements IOrdine {
     private final IBase partenza;
-    private String nomeBasePartenza = "";
+    private String nomeBasePartenza;
     
     private final IBase destinazione;
-    private String nomeBaseDestinazione = "";
+    private String nomeBaseDestinazione;
     
     private IAutotreno autotreno;
     private String nomeAutotreno;
@@ -29,11 +29,10 @@ public class Ordine extends UnicastRemoteObject implements IOrdine {
     
     private static int totaleOrdini = 0;
 
-    public Ordine (IBase partenza, IBase destinazione) throws RemoteException {
+    Ordine (IBase partenza, IBase destinazione) throws RemoteException {
         this.partenza = partenza;
         this.destinazione = destinazione;
         
-        autotreno = null;
         stato = "ricevuto";
         totaleOrdini +=1;
         numeroOrdine = totaleOrdini;
@@ -48,16 +47,16 @@ public class Ordine extends UnicastRemoteObject implements IOrdine {
     }
     
     @Override
-    public String getNomePartenza() {
+    public final String getNomePartenza() {
         return nomeBasePartenza;
     }
     
     @Override
-    public String getNomeDestinazione() {
+    public final String getNomeDestinazione() {
         return nomeBaseDestinazione;
     }
     
-    private void setNomeAutotreno(String nomeAutotreno) {
+    private void setNomeAutotreno(final String nomeAutotreno) {
         this.nomeAutotreno = nomeAutotreno;
     }
     
@@ -70,22 +69,22 @@ public class Ordine extends UnicastRemoteObject implements IOrdine {
     }
 
     @Override
-    public IBase getBasePartenza() {
+    public final IBase getBasePartenza() {
         return partenza;
     }
 
     @Override
-    public IBase getBaseDestinazione() {
+    public final IBase getBaseDestinazione() {
         return destinazione;
     }
     
     @Override
-    public IAutotreno getAutotreno() {
+    public final IAutotreno getAutotreno() {
         return autotreno;
     }
     
     @Override
-    public void setAutotreno(IAutotreno autotreno) {
+    public final void setAutotreno(final IAutotreno autotreno) {
         this.autotreno = autotreno;
         try {
             setNomeAutotreno(autotreno.getNomeAutotreno());
@@ -96,12 +95,12 @@ public class Ordine extends UnicastRemoteObject implements IOrdine {
     }
     
     @Override
-    public String getStato() {
+    public final String getStato() {
         return stato;
     }
     
     @Override
-    public void setStato(String stato) {
+    public final void setStato(final String stato) {
         this.stato = stato;
     }
 

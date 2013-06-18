@@ -12,21 +12,23 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
 /**
  *
  * @author marco
  */
-public class Base extends UnicastRemoteObject implements IBase {
-    private String nomeBase;
+class Base extends UnicastRemoteObject implements IBase {
+    private final String nomeBase;
     
-    private LinkedList<IOrdine> listaOrdini;
-    private LinkedList<IOrdine> storicoOrdini;
-    private LinkedList<IAutotreno> listaAutotreni;
-    private HashMap<String, Boolean> statoConsegne;
+    private final Queue<IOrdine> listaOrdini;
+    private final Queue<IOrdine> storicoOrdini;
+    private final Queue<IAutotreno> listaAutotreni;
+    private final Map<String, Boolean> statoConsegne;
     
-    private BaseGUI gui;
-    private IDitta ditta;
+    private final BaseGUI gui;
+    private final IDitta ditta;
     
     private boolean terminato;
 
@@ -44,13 +46,13 @@ public class Base extends UnicastRemoteObject implements IBase {
     }
     
     @Override
-    public String getNomeBase() {
+    public final String getNomeBase() {
         return nomeBase;
     }
 
     //metodo chiamato dalla ditta di trasporti per registrare un nuovo ordine
     @Override
-    public void registraOrdine(IOrdine ordine) {
+    public final void registraOrdine(IOrdine ordine) {
         try {
             ordine.setStato("non consegnato");
         } catch(RemoteException e) {
@@ -87,7 +89,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     
     //metodo chiamato dalla base di destinazione dell'ordine alla consegna dell'ordine
     @Override
-    public void ordineConsegnato(IOrdine ordine) {
+    public final void ordineConsegnato(IOrdine ordine) {
         //prendo il lock sullo stato delle consegne per aggiornare l'avvenuta consegna
         synchronized(statoConsegne) {
             try {
@@ -109,7 +111,7 @@ public class Base extends UnicastRemoteObject implements IBase {
 
     //metodo chiamato dall'autotreno che effettua l'ordine
     @Override
-    public void riceviMerce(IOrdine ordine) {
+    public final void riceviMerce(IOrdine ordine) {
         try {
             gui.aggiornaStatoTextArea("Ricevuto carico da " 
                     + ordine.getAutotreno().getNomeAutotreno());
@@ -134,13 +136,13 @@ public class Base extends UnicastRemoteObject implements IBase {
 
     //metodo chiamato dalla base di destinazione per parcheggiare l'autotreno
     @Override
-    public void parcheggiaAutotreno(IAutotreno autotreno) {
+    public final void parcheggiaAutotreno(final IAutotreno autotreno) {
         parcheggia(autotreno);
     }
     
     //metodo chiamato dalla ditta quando un autotreno cessa la propria attività
     @Override
-    public void aggiornaListaAutotreni(IAutotreno autotreno) throws RemoteException {
+    public final void aggiornaListaAutotreni(final IAutotreno autotreno) throws RemoteException {
         synchronized(listaAutotreni) {
             listaAutotreni.remove(autotreno);
         }
@@ -149,7 +151,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     
     //metodo chiamato per notificare la non consegna dell'ordine
     @Override
-    public void notificaOrdine(IOrdine ordine) throws RemoteException {
+    public final void notificaOrdine(final IOrdine ordine) throws RemoteException {
         try {
             synchronized(statoConsegne) {
                 statoConsegne.put(ordine.getNomeDestinazione(), false);
@@ -163,13 +165,13 @@ public class Base extends UnicastRemoteObject implements IBase {
     
     //metodo chiamato dalla ditta per testare l'attività di una base
     @Override
-    public boolean stato()  {
+    public final boolean stato()  {
         return true;
     }
 
     //metodo che termina l'attività della base
     @Override
-    public void terminaAttivita() {
+    public final void terminaAttivita() {
         terminato = true;
         gui.aggiornaStatoTextArea("La base ha ricevuto l'ordine di terminare "
                 + "la propria attività");
@@ -191,7 +193,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     }
     
     //metodo che parcheggia l'autotreno in arrivo e lo aggiunge alla lista
-    private void parcheggia(IAutotreno autotreno) {
+    private void parcheggia(final IAutotreno autotreno) {
         try {
             synchronized(listaAutotreni) {
                 listaAutotreni.add(autotreno);
@@ -238,7 +240,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     }
     
     //metodo che notifica alla ditta la consegna o la perdita dell'ordine
-    private void avvisaDitta(IOrdine ordine) {
+    private void avvisaDitta(final IOrdine ordine) {
         try {
             ditta.notificaEsito(ordine);
         } catch(RemoteException e1) {
@@ -248,7 +250,7 @@ public class Base extends UnicastRemoteObject implements IBase {
     }
     
     //thread che gestisce la consegna degli ordini ricevuti
-    class ConsegnaOrdine implements Runnable {
+    final class ConsegnaOrdine implements Runnable {
         private IOrdine ordine;
         private IBase destinazione;
         private IAutotreno autotreno = null;

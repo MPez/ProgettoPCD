@@ -1,5 +1,6 @@
 /*
- * Pezzutti Marco 1008804
+ * Copyright (c) 2013 Pezzutti Marco
+ * 
  * progetto per l'insegnamento di Programmazione Concorrente e Distribuita
  */
 package ditta;
@@ -15,25 +16,28 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 
 /**
  *
  * @author marco
  */
-public class Ditta extends UnicastRemoteObject implements IDitta {
-    private HashMap<IBase, Boolean> basiAttive;
-    private HashMap<String, IBase> nomiBasi;
-    private HashMap<IBase, String> basiNomi;
+class Ditta extends UnicastRemoteObject implements IDitta {
+    private final Map<IBase, Boolean> basiAttive;
+    private final Map<String, IBase> nomiBasi;
+    private final Map<IBase, String> basiNomi;
     
-    private HashMap<IAutotreno, Boolean> autotreniAttivi;
-    private HashMap<String, IAutotreno> nomiAutotreni;
-    private HashMap<IAutotreno, String> autotreniNomi;
+    private final Map<IAutotreno, Boolean> autotreniAttivi;
+    private final Map<String, IAutotreno> nomiAutotreni;
+    private final Map<IAutotreno, String> autotreniNomi;
     
-    private LinkedList<IOrdine> elencoOrdini;
-    private LinkedList<IOrdine> storicoOrdini;
+    private final Queue<IOrdine> elencoOrdini;
+    private final Queue<IOrdine> storicoOrdini;
     
-    private DittaGUI gui;
+    private final DittaGUI gui;
     
     private boolean terminato;
     
@@ -56,15 +60,15 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     }
     
     //metodo chiamato dalla GUI che ritorna un nuovo thread che genera ordini automaticamente
-    Thread avviaCreaOrdini() {
+    final Thread avviaCreaOrdini() {
         gui.aggiornaStatoTextArea("Generazione automatica degli ordini avviata");
         return new Thread(new CreaOrdini());
     }
     
     //metodo utilizzato per inserire nuovi ordini creati dalla GUI
-    void inserisciOrdine(String partenza, String destinazione, int quantita) {
-        IBase basePartenza;
-        IBase baseDestinazione;
+    final void inserisciOrdine(final String partenza, final String destinazione, final int quantita) {
+        final IBase basePartenza;
+        final IBase baseDestinazione;
         basePartenza = nomiBasi.get(partenza);
         baseDestinazione = nomiBasi.get(destinazione);
         
@@ -199,11 +203,11 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     }
     
     //thread gestito dalla pulsante Auto della GUI che, se attivo, crea ordini casuali ogni tempo millisecondi
-    class CreaOrdini implements Runnable {
+    final class CreaOrdini implements Runnable {
         private IBase basePartenza;
         private IBase baseDestinazione;
         
-        private LinkedList<IBase> listaBasi;
+        private final List<IBase> listaBasi;
         
         private final int tempo = 1000;
         private final int quantitaOrdini = 5;
@@ -234,7 +238,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                     //proseguo solo se ci sono basi attive
                     //controllo che il thread sia attivo
                     if(!terminato && !listaBasi.isEmpty()) {
-                        basePartenza = listaBasi.get(random.nextInt(listaBasi.size()));
+                        basePartenza = listaBasi. get(random.nextInt(listaBasi.size()));
                         baseDestinazione = listaBasi.get(random.nextInt(listaBasi.size()));
                         //controllo che il thread sia attivo
                         //controllo che le basi siano diverse
@@ -254,7 +258,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     
     //metodo che termina l'attività di tutte le basi e di tutti gli autotreni attivi
     //termina l'attività della ditta di trasporti
-    void terminaAttivita() {
+    final void terminaAttivita() {
         terminato = true;
         //risveglio gli eventuali thread dormienti
         synchronized(elencoOrdini) {
@@ -296,7 +300,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     
     //metodo chiamato da una base in fase di registrazione
     @Override
-    public void registraBase(IBase base) {
+    public final void registraBase(final IBase base) {
         //prendo il lock sulla lista delle basi attive
         //aggiungo la nuova base
         synchronized(basiAttive) {
@@ -330,7 +334,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     
     //metodo chiamato da un autotreno in fase di registrazione
     @Override
-    public IBase registraAutotreno(IAutotreno autotreno, String nomeBasePartenza) {
+    public final IBase registraAutotreno(final IAutotreno autotreno, final String nomeBasePartenza) {
         IBase partenza = null;
         try {
             //prendo il lock sulla mappa dei nomi delle basi
@@ -377,7 +381,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
 
     //metodo chiamato da una base al momento della ricezione di un ordine
     @Override
-    public void notificaEsito(IOrdine ordine) {
+    public final void notificaEsito(final IOrdine ordine) {
         try {
             gui.aggiornaStatoTextArea(ordine.stampaEsito());
         } catch(RemoteException e) {
@@ -388,14 +392,14 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
 
     //metodo che aggiorna la lista delle basi attive
     @Override
-    public void aggiornaBasiAttive(IBase base) {
+    public final void aggiornaBasiAttive(final IBase base) {
         rimuoviBase(base);
         gui.aggiornaStatoTextArea("La base " + basiNomi.get(base)
                 + " non è più attiva");
     }
     
     //metodo che rimuove una base dalla lista delle basi attive
-    private void rimuoviBase(IBase base) {
+    private void rimuoviBase(final IBase base) {
         synchronized(basiAttive) {
             basiAttive.put(base, false);
         }
@@ -404,7 +408,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
 
     //metodo che aggiorna la lista degli autotreni attivi
     @Override
-    public void aggiornaAutotreniAttivi(IAutotreno autotreno) {
+    public final void aggiornaAutotreniAttivi(final IAutotreno autotreno) {
         for(IOrdine ordine : storicoOrdini) {
             try {
                 if("in transito".equals(ordine.getStato())) {
@@ -423,7 +427,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     }
     
     //metodo che rimuove un autotreno dalla lista degli autotreni attivi
-    private void rimuoviAutotreno(IAutotreno autotreno) {
+    private void rimuoviAutotreno(final IAutotreno autotreno) {
         synchronized(autotreniAttivi) {
             autotreniAttivi.put(autotreno, false);
         }
@@ -431,7 +435,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     
     //metodo chiamato da un autotreno quando la base in cui era parcheggiato cessa la propria attività
     @Override
-    public IBase impostaNuovaBase(IAutotreno autotreno) throws RemoteException {
+    public final IBase impostaNuovaBase(final IAutotreno autotreno) throws RemoteException {
         IBase nuovaBase = null;
         for(IBase base : basiAttive.keySet()) {
             if(basiAttive.get(base)) {
@@ -442,7 +446,7 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
     }
     
     //thread che gestisce l'invio degli ordini alle rispettive basi
-    class InviaOrdini implements Runnable {
+    final class InviaOrdini implements Runnable {
         private IBase partenza;
         private IOrdine ordine;
         

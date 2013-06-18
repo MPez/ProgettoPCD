@@ -11,6 +11,7 @@ import common.IOrdine;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 import javax.swing.SwingWorker;
 
@@ -18,18 +19,18 @@ import javax.swing.SwingWorker;
  *
  * @author marco
  */
-public class Autotreno extends UnicastRemoteObject implements IAutotreno {
-    private String nomeAutotreno;
+class Autotreno extends UnicastRemoteObject implements IAutotreno {
+    private final String nomeAutotreno;
     private IBase basePartenza;
     private IBase baseDestinazione;
     private IOrdine ordine;
     
-    private LinkedList<IOrdine> listaOrdini;
+    private final Queue<IOrdine> listaOrdini;
     
     private Viaggio viaggio;
     
-    private AutotrenoGUI gui;
-    private IDitta ditta;
+    private final AutotrenoGUI gui;
+    private final IDitta ditta;
     
     private boolean terminato;
     private boolean viaggioEseguito;
@@ -45,7 +46,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     }
     
     //metodo che imposta la base di partenza e aggiorna la GUI
-    void setBasePartenza(IBase partenza) {
+    final void setBasePartenza(final IBase partenza) {
         this.basePartenza = partenza;
         try{
             gui.setPartenzaTextField(basePartenza.getNomeBase());
@@ -55,12 +56,12 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         }
     }
     
-    IBase getBasePartenza() {
+    final IBase getBasePartenza() {
         return basePartenza;
     }
     
     //metodo che imposta la base di destinazione e aggiorna la GUI
-    void setBaseDestinazione(IBase destinazione) {
+    final void setBaseDestinazione(final IBase destinazione) {
         this.baseDestinazione = destinazione;
         try{
             gui.setDestinazioneTextField(baseDestinazione.getNomeBase());
@@ -70,19 +71,19 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
         }
     }
     
-    IBase getBaseDestinazione() {
+    final IBase getBaseDestinazione() {
         return baseDestinazione;
     }
     
     @Override
-    public String getNomeAutotreno() {
+    final public String getNomeAutotreno() {
         return nomeAutotreno;
     }
     
     //metodo chiamato dalla ditta di trasporti
     //inserisce un nuovo ordine nella lista degli ordini
     @Override
-    public void registraOrdine(IOrdine ordine) {
+    final public void registraOrdine(IOrdine ordine) {
         try {
             ordine.setStato("in transito");
         } catch(RemoteException e) {
@@ -97,7 +98,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     //metodo chiamato dalla base di destinazione al momento dell'arrivo dell'ordine
     @Override
-    public void parcheggiaAutotreno(IBase destinazione) {
+    public final void parcheggiaAutotreno(final IBase destinazione) {
         setBasePartenza(destinazione);
         gui.setDestinazioneTextField("");
     }
@@ -106,7 +107,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     //l'autotreno non è più attiva
     //richiede una nuova base dove parcheggiarsi
     @Override
-    public void aggiornaBasePartenza() {
+    public final void aggiornaBasePartenza() {
         //se la base di partenza esite non faccio nulla
         //altrimenti richiedo una nuova base alla ditta
         //se la ditta non esiste più termino l'attività
@@ -139,19 +140,19 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     //metodo chiamato dalla ditta per controllare se l'autotreno è in viaggio
     @Override
-    public boolean getViaggioEseguito() {
+    public final boolean getViaggioEseguito() {
         return viaggioEseguito;
     }
     
     //metodo chiamato dalla ditta per testare l'attività di un autotreno
     @Override
-    public boolean stato() {
+    public final boolean stato() {
         return true;
     }
     
     //metodo che termina l'attività dell'autotreno
     @Override
-    public void terminaAttivita() {
+    public final void terminaAttivita() {
         terminato = true;       
         synchronized(listaOrdini) {
             listaOrdini.notify();
@@ -171,7 +172,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     }
     
     //thread che gestisce la consegna degli ordini ricevuti
-    class RecapitaOrdine implements Runnable {
+    final class RecapitaOrdine implements Runnable {
         @Override
         public void run() {
             while(!terminato) {
@@ -250,7 +251,7 @@ public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     
     //thread che aggiorna la barra di scorrimento presente nella GUI
     //rappresenta la durata del viaggio dell'autotreno
-    class Viaggio extends SwingWorker<Void, Void> {
+    final class Viaggio extends SwingWorker<Void, Void> {
         @Override
         protected Void doInBackground() {
             gui.setStatoTerminaAttivitaButton(false);
