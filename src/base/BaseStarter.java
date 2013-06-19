@@ -10,8 +10,9 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 
 /**
- *
- * @author marco
+ * Classe deputata alla creazione di una base e della relativa GUI
+ * 
+ * @author Pezzutti Marco
  */
 public class BaseStarter {
     private Base base;
@@ -20,7 +21,15 @@ public class BaseStarter {
     private IDitta ditta;
     private static final String HOST = "localhost:";
     
-    BaseStarter(String nomeBase) throws RemoteException {
+    /**
+     * Costruttore che recupera il riferimento remoto della Ditta di trasporti e 
+     * crea la base e la sua GUI e le avvia
+     * 
+     * @param nomeBase              nome proprio della base
+     * @throws RemoteException 
+     */
+    public BaseStarter(String nomeBase) throws RemoteException {
+        //recupero il riferimento remoto della Ditta di trasporti
         try {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {
@@ -37,17 +46,23 @@ public class BaseStarter {
         this.avviaBase();
     }
     
-    //metodo che avvia la base
+    /**
+     * Metodo che avvia il thread della base che effettua la consegna degli ordini
+     */
     private void avviaBase() {
         new Thread(base.new ConsegnaOrdine()).start();
     }
     
-    //metodo che avvia la GUI
+    /**
+     * Metodo che avvia la GUI 
+     */
     private void avviaGUI() {
         new Thread(gui).start();
     }
     
-    //metodo che registra la base presso la ditta di trasporti
+    /**
+     * Metodo che registra la base presso la ditta di trasporti 
+     */
     private void registra() {
         try {
             ditta.registraBase(base);
@@ -57,6 +72,11 @@ public class BaseStarter {
         }
     }
     
+    /**
+     * Metodo main che recupera il parametro in input, crea un'istanza di BaseStarter
+     * ed effettua la richiesta di registrazione della base
+     * @param args 
+     */
     public static void main(String[] args) {
         String nomeBase = args[0];
         try {

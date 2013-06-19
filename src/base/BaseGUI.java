@@ -7,8 +7,9 @@ package base;
 import javax.swing.text.DefaultCaret;
 
 /**
- *
- * @author marco
+ * Interfaccia grafica di una base
+ * 
+ * @author Pezzutti Marco 1008804
  */
 public class BaseGUI extends javax.swing.JFrame implements Runnable {
     private Base base;
@@ -21,14 +22,20 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
         this.setTitle(nomeBase);
         
         DefaultCaret caret;
+        
         //imposto l'autoscrolling di statoTextArea
         caret = (DefaultCaret) statoTextArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        
         //imposto l'autoscrolling di ordiniTextArea
         caret = (DefaultCaret) ordiniTextArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
     }
     
+    /**
+     * Metodo che imposta la base propria della GUI
+     * @param base 
+     */
     void setBase(Base base) {
         this.base = base;
     }
@@ -162,20 +169,37 @@ public class BaseGUI extends javax.swing.JFrame implements Runnable {
         base.terminaAttivita();
     }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
-
+    /**
+     * Metodo che rende visibile la GUI
+     */
     @Override
     public void run() {
         this.setVisible(true);
     }
     
+    /**
+     * Metodo che imposta la lista degli ordini presenti
+     * 
+     * @param text                  stringa contente l'elenco degli ordini
+     */
     void setOrdiniTextArea(String text) {
         ordiniTextArea.setText(text);
     }
     
+    /**
+     * Metodo che imposta la lista degli autotreni parcheggiati
+     * 
+     * @param text                  stringa contenente l'elenco degli autotreni
+     */
     void setAutotreniTextArea(String text) {
         autotreniTextArea.setText(text);
     }
     
+    /**
+     * Metodo che aggiorna lo stato della base
+     * 
+     * @param text                  stringa contenente un nuovo messaggio di stato
+     */
     void aggiornaStatoTextArea(String text) {
         statoTextArea.append(text + "\n");
     }

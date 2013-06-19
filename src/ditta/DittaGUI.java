@@ -8,8 +8,9 @@ import javax.swing.JOptionPane;
 import javax.swing.text.DefaultCaret;
 
 /**
- *
- * @author marco
+ * Interfaccia grafica della Ditta di trasporti
+ * 
+ * @author Pezzutti Marco 1008804
  */
 public class DittaGUI extends javax.swing.JFrame implements Runnable {
     Ditta ditta;
@@ -27,15 +28,22 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         creaOrdiniAttivo = false;
         
         DefaultCaret  caret;
+        
         //imposto l'autoscrolling di statoTextArea
         caret = (DefaultCaret) statoTextArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        
         //imposto l'autoscrolling di ordiniInseritiTextArea
         caret = (DefaultCaret) ordiniInseritiTextArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         
     }
 
+    /**
+     * Metodo che imposta la ditta propria della GUI
+     * 
+     * @param ditta                 riferimento alla Ditta
+     */
     void setDitta(Ditta ditta) {
         this.ditta = ditta;
     }
@@ -214,6 +222,13 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * Metodo invocato alla pressione del pulsante Invia Ordine che recupera i nomi 
+     * delle base di partenza e di arrivo e la quantità impostati e avvisa la Ditta
+     * della presenza di un nuovo ordine
+     * 
+     * @param evt                   riferimento all'evento scatenato dal pulsante
+     */
     private void inviaOrdineButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inviaOrdineButtonActionPerformed
         String partenza = (String) basePartenzaComboBox.getSelectedItem();
         String destinazione = (String) baseDestinazioneComboBox.getSelectedItem();
@@ -229,11 +244,22 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         }
     }//GEN-LAST:event_inviaOrdineButtonActionPerformed
 
+    /**
+     * Metodo invocato alla pressione del pulsante Termina Attività che avvisa 
+     * la Ditta di terminare tutte le attività di trasporto
+     * 
+     * @param evt                   riferimento all'evento scatenato dal pulsante
+     */
     private void terminaAttivitaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_terminaAttivitaButtonActionPerformed
         ditta.terminaAttivita();
     }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
-    //metodo che crea e avvia un thread che crea ordini automaticamente
+    /**
+     * Metodo invocato alla pressione del pulsante Auto che si occupa di avviare 
+     * un thread che crea ordini automaticamente alla prima pressione del pulsante, 
+     * alla seconda pressione arresta la creazione automatica
+     * @param evt 
+     */
     private void creaOrdiniButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_creaOrdiniButtonActionPerformed
         if(!creaOrdiniAttivo) {
             creaOrdini = ditta.avviaCreaOrdini();
@@ -248,25 +274,46 @@ public class DittaGUI extends javax.swing.JFrame implements Runnable {
         }
     }//GEN-LAST:event_creaOrdiniButtonActionPerformed
 
+    /**
+     * Metodo che rende visibile la GUI
+     */
     @Override
     public void run() {
         this.setVisible(true);
     }
     
+    /*
+     * Metodo che aggiunge una base appena creata all'elenco delle basi
+     */
     void aggiungiBaseComboBox(String base) {
         baseDestinazioneComboBox.addItem(base);
         basePartenzaComboBox.addItem(base);
     }
     
+    /**
+     * Metodo che rimuove la base passata come parametro dall'elenco delle basi
+     * 
+     * @param base                  nome della base da rimuovere
+     */
     void rimuoviBaseComboBox(String base) {
         baseDestinazioneComboBox.removeItem(base);
         basePartenzaComboBox.removeItem(base);
     }
     
+    /**
+     * Metodo che aggiorna lo stato della Ditta
+     * 
+     * @param text                  stringa contenente un nuovo messaggio di stato
+     */
     void aggiornaStatoTextArea(String text) {
         statoTextArea.append(text + "\n");
     }
     
+    /**
+     * Metodo che aggiorna la lista degli ordini
+     * 
+     * @param text                  stringa contenente l'elenco degli ordini
+     */
     void aggiornaOrdiniTextArea(String text) {
         ordiniInseritiTextArea.setText(text + "\n");
     }

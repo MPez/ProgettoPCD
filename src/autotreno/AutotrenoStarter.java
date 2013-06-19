@@ -11,8 +11,9 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 
 /**
- *
- * @author marco
+ * Classe deputata alla creazione di un autotreno e della relativa GUI
+ * 
+ * @author Pezzutti Marco 1008804
  */
 public class AutotrenoStarter {
     private Autotreno autotreno;
@@ -21,7 +22,16 @@ public class AutotrenoStarter {
     private IDitta ditta;
     private static final String HOST = "localhost:";
     
-    AutotrenoStarter(String nomeAutotreno, String nomeBasePartenza) throws RemoteException {
+    /**
+     * Costruttore che recupera il riferimento remoto della Ditta di trasporti e 
+     * crea l'autotreno e la sua GUI e le avvia
+     * 
+     * @param nomeAutotreno         
+     * @param nomeBasePartenza
+     * @throws RemoteException 
+     */
+    public AutotrenoStarter(String nomeAutotreno, String nomeBasePartenza) throws RemoteException {
+        //recupero il riferimento remoto della Ditta di trasporti
         try {
             ditta = (IDitta) Naming.lookup("rmi://" + HOST + "/dittaTrasporti");
         } catch (ConnectException e) {
@@ -37,18 +47,26 @@ public class AutotrenoStarter {
         this.avviaAutotreno();
     }
     
-    //metodo che avvia la gui dell'autotreno
+    /**
+     * Metodo che avvia la gui dell'autotreno
+     */
     private void avviaGUI() {
         new Thread(gui).start();
     }
     
-    //metodo che avvia 
+    /**
+     * Metodo che avvia il thread dell'autotreno che effettua il recapito degli organi
+     */
     private void avviaAutotreno() {
         new Thread(autotreno.new RecapitaOrdine()).start();
     }
     
-    //metodo che si connette alla ditta per la registrazione dell'autotreno e
-    //che si connette alla base di partenza per parcheggiarlo
+    /**
+     * Metodo che si connette alla Ditta per la registrazione dell'autotreno e 
+     * che si connette alla base di partenza per parcheggiarlo
+     * 
+     * @param nomeBasePartenza          nome della base di partenza
+     */
     private void registra(String nomeBasePartenza) {
         try {
             IBase basePartenza = ditta.registraAutotreno(autotreno, nomeBasePartenza);
@@ -66,6 +84,13 @@ public class AutotrenoStarter {
         }
     }
     
+    /**
+     * Metodo main che recupera i paramentri in input, crea un istanza di AutotrenoStarter
+     * ed effettua la richiesta di registrazione dell'autotreno
+     * 
+     * @param args[0]                   nome dell'autotreno
+     * @param args[1]                   nome della base di partenza
+     */
     public static void main(String[] args) {
         String nomeAutotreno = args[0];
         String nomeBasePartenza = args[1];

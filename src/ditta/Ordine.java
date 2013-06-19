@@ -11,8 +11,9 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
- *
- * @author marco
+ * Classe che rappresenta un ordine da consegnare
+ * 
+ * @author Pezzutti Marco 1008804
  */
 class Ordine extends UnicastRemoteObject implements IOrdine {
     private final IBase partenza;
@@ -29,6 +30,14 @@ class Ordine extends UnicastRemoteObject implements IOrdine {
     
     private static int totaleOrdini = 0;
 
+    /**
+     * Costruttore che imposta la base di partenza e di destinazione passate come 
+     * paramentri, imposta lo stato iniziale dell'ordine e il numero d'ordine
+     * 
+     * @param partenza              riferimento alla base di partenza
+     * @param destinazione          riferimento alla base di destinazione
+     * @throws RemoteException 
+     */
     Ordine (IBase partenza, IBase destinazione) throws RemoteException {
         this.partenza = partenza;
         this.destinazione = destinazione;
@@ -37,6 +46,7 @@ class Ordine extends UnicastRemoteObject implements IOrdine {
         totaleOrdini +=1;
         numeroOrdine = totaleOrdini;
         
+        //recupero i nomi delle basi di partenza e destinazione
         try {
             nomeBasePartenza = this.partenza.getNomeBase();
             nomeBaseDestinazione = this.destinazione.getNomeBase();
@@ -56,14 +66,29 @@ class Ordine extends UnicastRemoteObject implements IOrdine {
         return nomeBaseDestinazione;
     }
     
+    /**
+     * Metodo che imposta il nome dell'autotreno che consegnerà l'ordine
+     * 
+     * @param nomeAutotreno         nome dell'autotreno
+     */
     private void setNomeAutotreno(final String nomeAutotreno) {
         this.nomeAutotreno = nomeAutotreno;
     }
     
+    /**
+     * Metodo che ritorna il nome dell'autotreno che consegna l'ordine
+     * 
+     * @return                      nome dell'autotreno
+     */
     private String getNomeAutotreno() {
         return nomeAutotreno;
     }
     
+    /**
+     * Metodo che ritorna il numero d'ordine
+     * 
+     * @return                      numero d'ordine
+     */
     private int getNumeroOrdine() {
         return numeroOrdine;
     }
@@ -106,26 +131,23 @@ class Ordine extends UnicastRemoteObject implements IOrdine {
 
     @Override
     public String stampaStato() {
-        String s;
-        s = "Ordine " + getNumeroOrdine() + " " + getStato();
-        return s;
+        return "Ordine " + getNumeroOrdine() + " " + getStato();
     }
 
     @Override
     public String stampaEsito() throws RemoteException {
-        String e;
-        e = "Ordine " + getNumeroOrdine() + " da " 
-                + getNomePartenza() + " a " 
+        return "Ordine " + getNumeroOrdine() + " da " + getNomePartenza() + " a " 
                 + getNomeDestinazione() + " " + getStato()
                 + " da " + getNomeAutotreno();
-        return e;
     }
 
     @Override
     public String stampaNumeroDestinazione() throws RemoteException {
-        String s;
-        s = getNumeroOrdine() + ": per " + getNomeDestinazione()
-                + " " + getStato();
-        return s;
+        return getNumeroOrdine() + ": per " + getNomeDestinazione() + " " + getStato();
+    }
+
+    @Override
+    public String stampaRicevuto() throws RemoteException {
+        return "Ricevuto ordine " + getNumeroOrdine() + " da " + getNomeAutotreno();
     }
 }

@@ -8,11 +8,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 /**
- *
- * @author marco
+ * Interfaccia grafica di un autotreno
+ * 
+ * @author Pezzutti Marco 1008804
  */
 public class AutotrenoGUI extends javax.swing.JFrame implements Runnable, PropertyChangeListener {
-    
     Autotreno autotreno;
 
     /**
@@ -23,6 +23,10 @@ public class AutotrenoGUI extends javax.swing.JFrame implements Runnable, Proper
         this.setTitle(nome);
     }
     
+    /**
+     * Metodo che imposta l'autotreno proprio della GUI
+     * @param autotreno 
+     */
     void setAutotreno(Autotreno autotreno) {
         this.autotreno = autotreno;
     }
@@ -131,31 +135,46 @@ public class AutotrenoGUI extends javax.swing.JFrame implements Runnable, Proper
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * Metodo invocato alla pressione del pulsante Termina Attività che avvisa 
+     * l'autotreno di cessare la propria attività
+     * @param evt                   riferimento all'evento generato dal pulsante
+     */
     private void terminaAttivitaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_terminaAttivitaButtonActionPerformed
         autotreno.terminaAttivita();
     }//GEN-LAST:event_terminaAttivitaButtonActionPerformed
 
+    /**
+     * Metodo chiamato dall'autotreno per impostare la base di destinazione
+     * 
+     * @param base                  nome della base di destinazione
+     */
     void setDestinazioneTextField(String base) {
         baseDestinazioneTextField.setText(base);
     }
     
+    /**
+     * Metodo chiamato dall'autotreno per impostare la base di partenza
+     * 
+     * @param base                  nome della base di partenza
+     */
     void setPartenzaTextField(String base) {
         basePartenzaTextField.setText(base);
     }
     
-    void aggiornaViaggioProgressBar(int n) {
-        durataViaggioProgressBar.setValue(n);
-    }
-    
-    void inizializzaViaggioProgressBar(int min, int max) {
-        durataViaggioProgressBar.setMinimum(min);
-        durataViaggioProgressBar.setMaximum(max);
-    }
-    
+    /**
+     * Metodo chiamato dall'autotreno che imposta lo stato del pulsante Termina Attività,
+     * se il valore è true lo attiva, altrimenti lo disattiva
+     * 
+     * @param stato                 booleano che indica lo stato del pulsante
+     */
     void setStatoTerminaAttivitaButton(boolean stato) {
         terminaAttivitaButton.setEnabled(stato);
     }
     
+    /**
+     * Metodo che rende visibile l'interfaccia grafica
+     */
     @Override
     public void run() {
         this.setVisible(true);
@@ -172,6 +191,12 @@ public class AutotrenoGUI extends javax.swing.JFrame implements Runnable, Proper
     private javax.swing.JButton terminaAttivitaButton;
     // End of variables declaration//GEN-END:variables
 
+    /**
+     * Metodo che aggiorna la barra di progesso ad ogni modifica effettuata 
+     * dallo SwingWorker Viaggio
+     * 
+     * @param pce                   riferimento alla proprietà modificata
+     */
     @Override
     public void propertyChange(PropertyChangeEvent pce) {
         if ("progress" == pce.getPropertyName()) {
