@@ -36,7 +36,7 @@ import java.util.Queue;
  * 
  * @author Pezzutti Marco 1008804
  */
-class Base extends UnicastRemoteObject implements IBase {
+public class Base extends UnicastRemoteObject implements IBase {
     private final String nomeBase;
     
     private final Queue<IOrdine> listaOrdini;
@@ -58,7 +58,7 @@ class Base extends UnicastRemoteObject implements IBase {
      * @param ditta                 riferimento remoto alla Ditta di trasporti
      * @throws RemoteException 
      */
-    Base(String nomeBase, BaseGUI gui, IDitta ditta) throws RemoteException {
+    public Base(String nomeBase, BaseGUI gui, IDitta ditta) throws RemoteException {
         listaOrdini = new LinkedList<IOrdine>();
         storicoOrdini = new LinkedList<IOrdine>();
         listaAutotreni = new LinkedList<IAutotreno>();

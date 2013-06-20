@@ -45,7 +45,7 @@ import java.util.Random;
  * 
  * @author Pezzutti Marco 1008804
  */
-class Ditta extends UnicastRemoteObject implements IDitta {
+public class Ditta extends UnicastRemoteObject implements IDitta {
     private final Map<IBase, Boolean> basiAttive;
     private final Map<String, IBase> nomiBasi;
     private final Map<IBase, String> basiNomi;
@@ -71,7 +71,7 @@ class Ditta extends UnicastRemoteObject implements IDitta {
      * @param gui                   riferimento all'interfaccia grafica
      * @throws RemoteException 
      */
-    Ditta(DittaGUI gui) throws RemoteException {
+    public Ditta(DittaGUI gui) throws RemoteException {
         basiAttive = new HashMap<IBase, Boolean>();
         nomiBasi = new HashMap<String, IBase>();
         basiNomi = new HashMap<IBase, String>();

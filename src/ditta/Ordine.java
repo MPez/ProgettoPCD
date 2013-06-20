@@ -30,7 +30,7 @@ import java.rmi.server.UnicastRemoteObject;
  * 
  * @author Pezzutti Marco 1008804
  */
-class Ordine extends UnicastRemoteObject implements IOrdine {
+public class Ordine extends UnicastRemoteObject implements IOrdine {
     private final IBase partenza;
     private String nomeBasePartenza;
     
@@ -53,7 +53,7 @@ class Ordine extends UnicastRemoteObject implements IOrdine {
      * @param destinazione          riferimento alla base di destinazione
      * @throws RemoteException 
      */
-    Ordine (IBase partenza, IBase destinazione) throws RemoteException {
+    public Ordine (IBase partenza, IBase destinazione) throws RemoteException {
         this.partenza = partenza;
         this.destinazione = destinazione;
         

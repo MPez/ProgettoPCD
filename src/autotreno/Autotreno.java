@@ -36,7 +36,7 @@ import javax.swing.SwingWorker;
  * 
  * @author Pezzutti Marco 1008804
  */
-class Autotreno extends UnicastRemoteObject implements IAutotreno {
+public class Autotreno extends UnicastRemoteObject implements IAutotreno {
     private final String nomeAutotreno;
     private IBase basePartenza;
     private IBase baseDestinazione;
@@ -61,7 +61,7 @@ class Autotreno extends UnicastRemoteObject implements IAutotreno {
      * @param ditta                 riferimento remoto alla Ditta di trasporti
      * @throws RemoteException 
      */
-    Autotreno(String nomeAutotreno, AutotrenoGUI gui, IDitta ditta) throws RemoteException {
+    public Autotreno(String nomeAutotreno, AutotrenoGUI gui, IDitta ditta) throws RemoteException {
         this.nomeAutotreno = nomeAutotreno;
         this.gui = gui;
         this.ditta = ditta;
