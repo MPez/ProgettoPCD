@@ -19,7 +19,8 @@
  */
 package common;
 
-import java.rmi.*;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 /**
  * Interfaccia remota che pubblicizza i metodi di un autotreno
