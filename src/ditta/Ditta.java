@@ -319,20 +319,12 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
      */
     final void terminaAttivita() {
         terminato = true;
+        
         //risveglio gli eventuali thread dormienti
         synchronized(elencoOrdini) {
             elencoOrdini.notify();
         }
-        //chiudo l'interfaccia utente
-        gui.dispose();
-        //termina tutte le basi
-        for(IBase base : basiAttive.keySet()) {
-            if(basiAttive.get(base)) {
-                try {
-                    base.terminaAttivita();
-                } catch(RemoteException ignore) {}
-            }
-        }
+        
         //termina tutti gli autotreni
         for(IAutotreno autotreno : autotreniAttivi.keySet()) {
             if(autotreniAttivi.get(autotreno)) {
@@ -341,6 +333,16 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                 } catch(RemoteException ignore) {}
             }
         }
+        
+        //termina tutte le basi
+        for(IBase base : basiAttive.keySet()) {
+            if(basiAttive.get(base)) {
+                try {
+                    base.terminaAttivita();
+                } catch(RemoteException ignore) {}
+            }
+        }
+        
         //rimuove dal registro RMI la ditta di trasporti
         try {
             String rmiNomeDitta = "rmi://" + HOST + "/dittaTrasporti";
@@ -353,6 +355,10 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
         } catch(NotBoundException e2) {
             e2.printStackTrace();
         }
+        
+        //chiudo l'interfaccia utente
+        gui.dispose();
+        
         //chiudo la ditta
         System.exit(0);
     }
