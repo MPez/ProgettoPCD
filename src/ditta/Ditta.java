@@ -133,11 +133,13 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
      */
     private void aggiornaOrdiniGUI() {
         String text = "";
-        for(IOrdine ordine : storicoOrdini) {
-            try {
-                text += ordine.stampaStato() + "\n";
-            } catch(RemoteException e) {
-                System.out.println("Dao: Errore di comunicazione con un ordine");
+        synchronized(storicoOrdini) {
+            for(IOrdine ordine : storicoOrdini) {
+                try {
+                    text += ordine.stampaStato() + "\n";
+                } catch(RemoteException e) {
+                    System.out.println("Dao: Errore di comunicazione con un ordine");
+                }
             }
         }
         gui.aggiornaOrdiniTextArea(text);
