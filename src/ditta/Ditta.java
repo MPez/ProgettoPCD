@@ -117,7 +117,9 @@ public class Ditta extends UnicastRemoteObject implements IDitta {
                 for(int i = 0; i < quantita; i++) {
                     IOrdine ordine = new Ordine(basePartenza, baseDestinazione);
                     elencoOrdini.add(ordine);
-                    storicoOrdini.add(ordine);
+                    synchronized(storicoOrdini) {
+                        storicoOrdini.add(ordine);
+                    }
                     aggiornaOrdiniGUI();
                 }
             } catch(RemoteException e) {
